@@ -42,7 +42,10 @@
       "priceLabel": "8.29",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Brooklyn Cured Beef Salami"
+      "searchQuery": "Brooklyn Cured Beef Salami",
+      "image": "https://images.openfoodfacts.org/images/products/009/522/584/9404/front_en.22.400.jpg",
+      "imageSource": "Open Food Facts",
+      "imageProductCode": "0095225849404"
     },
     {
       "id": "publix-2026-11-4",
@@ -757,7 +760,10 @@
       "priceLabel": "4.78–6.99",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Ore-Ida Potatoes"
+      "searchQuery": "Ore-Ida Potatoes",
+      "image": "https://images.openfoodfacts.org/images/products/001/312/000/2861/front_en.58.400.jpg",
+      "imageSource": "Open Food Facts",
+      "imageProductCode": "0013120002861"
     },
     {
       "id": "publix-2026-11-59",
@@ -1667,7 +1673,10 @@
       "priceLabel": "4.99",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Sonny’s BBQ Sauce"
+      "searchQuery": "Sonny’s BBQ Sauce",
+      "image": "https://images.openfoodfacts.org/images/products/078/119/819/1601/front_en.5.400.jpg",
+      "imageSource": "Open Food Facts",
+      "imageProductCode": "0781198191601"
     },
     {
       "id": "publix-2026-11-129",
@@ -1771,7 +1780,10 @@
       "priceLabel": "4.49",
       "coupon": "$0.75 back on 1 Welch’s Sparkling Juice 25.4 oz — Ibotta, limit 5",
       "notes": "",
-      "searchQuery": "Welch’s Sparkling Non-Alcoholic Juice Cocktail"
+      "searchQuery": "Welch’s Sparkling Non-Alcoholic Juice Cocktail",
+      "image": "https://images.openfoodfacts.org/images/products/004/180/070/6181/front_en.3.400.jpg",
+      "imageSource": "Open Food Facts",
+      "imageProductCode": "0041800706181"
     },
     {
       "id": "publix-2026-11-137",
