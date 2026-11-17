@@ -42,3 +42,5 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .bottom-nav .nav-symbol{font-size:25px;line-height:1.1}
 .bottom-nav small{font-size:11px;font-weight:700}
 .favorite-btn{background:transparent!important;color:var(--muted)!important;border:1px solid var(--border)!important;margin-top:2px!important}
+
+.image-credit{font-size:10px;color:var(--muted);text-align:right}
