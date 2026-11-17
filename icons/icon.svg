@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="bogo b dot icon"><rect width="512" height="512" rx="96" fill="#101914"/><text x="92" y="387" fill="#B5D58D" font-family="Arial,Helvetica,sans-serif" font-size="390" font-weight="700" letter-spacing="-18">b</text><circle cx="404" cy="361" r="42" fill="#91BA98"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="bogo b dot app icon">
+<rect width="512" height="512" rx="104" fill="#101914"/>
+<path fill="#B5D58D" fill-rule="evenodd" d="M111 94H187V222C210 192 242 178 281 178C344 178 386 225 386 293C386 361 342 406 279 406C239 406 207 389 185 360V397H111V94ZM251 241C212 241 187 262 187 294C187 326 212 346 251 346C290 346 311 326 311 294C311 262 290 241 251 241Z"/>
+<circle cx="414" cy="362" r="34" fill="#91BA98"/>
+</svg>
