@@ -44,3 +44,5 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .favorite-btn{background:transparent!important;color:var(--muted)!important;border:1px solid var(--border)!important;margin-top:2px!important}
 
 .image-credit{font-size:10px;color:var(--muted);text-align:right}
+
+.image-variant{font-size:10px;line-height:1.35;color:var(--muted)}
