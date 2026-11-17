@@ -3,12 +3,12 @@
   "short_name": "bogo",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#FAF6EB",
-  "theme_color": "#1F1606",
+  "background_color": "#15120e",
+  "theme_color": "#15120e",
   "description": "Visual weekly grocery deals",
   "icons": [
     {
-      "src": "icons/icon.svg?v=3",
+      "src": "icons/icon.svg?v=5",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
