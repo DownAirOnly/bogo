@@ -1,0 +1,42 @@
+{
+  "updated": "2026-11-17",
+  "source": "Initial sample; full catalog pending",
+  "deals": [
+    {
+      "id": "salad",
+      "name": "Fresh Attitude Salads",
+      "category": "Produce",
+      "details": "5 oz",
+      "price": 3.99
+    },
+    {
+      "id": "boursin",
+      "name": "Boursin Gourmet Cheese",
+      "category": "Dairy",
+      "details": "4.23–5.3 oz",
+      "price": 5.99
+    },
+    {
+      "id": "sabra",
+      "name": "Sabra Hummus",
+      "category": "Deli",
+      "details": "8 oz",
+      "price": 4.29,
+      "coupon": "$0.75/1 digital coupon"
+    },
+    {
+      "id": "lays",
+      "name": "Lay’s Potato Chips",
+      "category": "Pantry",
+      "details": "5–8 oz",
+      "price": 4.29
+    },
+    {
+      "id": "breyers",
+      "name": "Breyers Ice Cream",
+      "category": "Frozen",
+      "details": "1.5 qt",
+      "price": 6.51
+    }
+  ]
+}
