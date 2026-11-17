@@ -16,7 +16,10 @@
       "priceLabel": "3.99",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Fresh Attitude Salads — Spring Mix, Arugula, Half and Half, Hearty Harvest, or Baby Spinach"
+      "searchQuery": "Fresh Attitude Salads — Spring Mix, Arugula, Half and Half, Hearty Harvest, or Baby Spinach",
+      "image": "https://www.instacart.com/image-server/1200x1200/www.instacart.com/assets/domains/product-image/file/large_b63c80fa-8fe0-470f-a387-5c92a49ff817.png",
+      "imageSource": "Instacart product listing",
+      "imageVariant": "Spring Mix, 5 oz (representative variety)"
     },
     {
       "id": "publix-2026-11-2",
@@ -29,7 +32,10 @@
       "priceLabel": "5.99–7.29",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Boursin Gourmet Cheese"
+      "searchQuery": "Boursin Gourmet Cheese",
+      "image": "https://s7d9.scene7.com/is/image/dolgen/pop-27014301-1",
+      "imageSource": "pOpshelf product listing",
+      "imageVariant": "Garlic & Fine Herbs, 5.2 oz (representative variety)"
     },
     {
       "id": "publix-2026-11-3",
@@ -84,7 +90,10 @@
       "priceLabel": "4.29",
       "coupon": "$0.75 off 1 Sabra 8 oz or larger tub — Publix digital coupon",
       "notes": "",
-      "searchQuery": "Sabra Hummus"
+      "searchQuery": "Sabra Hummus",
+      "image": "https://www.kroger.com/product/images/xlarge/front/0004082234610",
+      "imageSource": "Kroger product listing",
+      "imageVariant": "Classic, 8 oz (representative variety)"
     },
     {
       "id": "publix-2026-11-7",
