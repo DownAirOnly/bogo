@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - scripts/enrich_images.py
+      - .github/workflows/photos.yml
   schedule:
     - cron: '30 13 * * 4'
 permissions:
