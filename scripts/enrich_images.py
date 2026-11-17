@@ -17,7 +17,7 @@ for deal in deals:
     if deal.get("image") or deal.get("category") == "Beer, Wine & Alternatives":
         continue
     query = deal.get("searchQuery") or deal["name"]
-    if re.search(r"\\bor\\b|/", query, re.I):
+    if re.search(r"\bor\b|/", query, re.I):
         continue  # Multiple variants: one photo could be misleading.
     try:
         params = urllib.parse.urlencode({"search_terms":query,"search_simple":1,"action":"process","json":1,"page_size":5,"fields":"product_name,brands,image_front_url,image_url,code"})
@@ -43,5 +43,5 @@ for deal in deals:
         print("Skipping", query, type(exc).__name__, str(exc)[:120])
     time.sleep(0.4)
 if updated:
-    path.write_text(json.dumps(catalog,indent=2,ensure_ascii=False)+"\\n")
+    path.write_text(json.dumps(catalog,indent=2,ensure_ascii=False)+"\n")
 print(f"Matched {updated} of {len(deals)} products; uncertain photos left blank")
