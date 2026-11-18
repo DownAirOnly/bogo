@@ -452,6 +452,7 @@ function changeWeek(id){
   const w=weekCatalogs.find(w=>w.id===id);
   if(!w)return;
   selectedWeekId=id;deals=[...importedDeals,...w.catalog.deals];
+  focusShoppingListForWeek(w.catalog);
   category="All";view="deals";render();
 }
 // One-page shopping checklist. Estimates assume Publix BOGO is buy two,
@@ -467,7 +468,8 @@ function quantityOf(record){
   return Number.isInteger(n)?Math.min(99,Math.max(1,n)):2;
 }
 function shoppingListRecords(){
-  const liveByKey=new Map(deals.map(d=>[shoppingItemKey(d),d]));
+  const ad=adForDate(selectedShoppingList()?.weekStart);
+  const liveByKey=new Map((ad?.deals||[]).map(d=>[shoppingItemKey(d),d]));
   return Object.entries(shoppingItems).filter(([,record])=>record&&record.name).map(([key,record])=>{
     const live=liveByKey.get(key);
     return {key,record,deal:live||record,live:!!live};
@@ -476,9 +478,9 @@ function shoppingListRecords(){
 }
 function estimateShoppingItem(entry){
   const qty=quantityOf(entry.record);
-  const selected=weekCatalogs.find(w=>w.id===selectedWeekId);
-  if(!entry.live)return {available:false,reason:"Not in selected ad"};
-  if(selected&&weekState(selected.catalog)==="expired")
+  const selected=adForDate(selectedShoppingList()?.weekStart);
+  if(!entry.live)return {available:false,reason:"Not in this week's catalog"};
+  if(selected&&weekState(selected)==="expired")
     return {available:false,reason:"Sale has ended"};
   if(priceUnit(entry.deal)==="/lb")
     return {available:false,reason:"Price per lb; weight needed"};
@@ -531,6 +533,69 @@ function updateShoppingListUI(){
     if(minus)minus.disabled=quantityOf(entry.record)<=1;
   }
 }
+function listDisplayName(list){
+  return (list.name||"Shopping list")+(list.weekStart?" · "+dateLabel(list.weekStart):"");
+}
+function listWeekChoices(){
+  const dates=new Map();
+  for(const week of weekCatalogs)
+    dates.set(week.catalog.saleStart,week.catalog.saleEnd);
+  for(const list of Object.values(shoppingLists))
+    if(list.weekStart&&!dates.has(list.weekStart))dates.set(list.weekStart,list.weekEnd);
+  return [...dates].sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function listSelectionHTML(){
+  const lists=Object.values(shoppingLists).sort((a,b)=>
+    (b.weekStart||"").localeCompare(a.weekStart||"")||
+    Number(b.default)-Number(a.default)||a.name.localeCompare(b.name));
+  const chosen=selectedShoppingList();
+  return '<div class="list-manager"><label for="list-picker">Shopping lists</label>'+
+    '<div class="list-manager-row"><select id="list-picker" aria-label="Choose shopping list">'+
+    lists.map(item=>'<option value="'+esc(item.id)+'"'+(item.id===activeListId?" selected":"")+'>'+
+      esc(listDisplayName(item))+'</option>').join("")+'</select>'+
+    '<button id="list-create" type="button">+ New</button></div>'+
+    '<div class="list-manage-actions"><span>'+
+      (chosen?.weekStart?"Ad "+esc(dateLabel(chosen.weekStart)+"–"+dateLabel(chosen.weekEnd)):"General items")+'</span>'+
+    '<button id="list-rename" type="button">Rename</button>'+
+    '<button id="list-discard" type="button">'+(chosen?.default?"Clear":"Delete")+'</button></div></div>';
+}
+function openListEditor(mode){
+  const current=selectedShoppingList();
+  const dialog=document.createElement("dialog");
+  dialog.className="list-editor-dialog";
+  const isNew=mode==="new";
+  dialog.innerHTML='<form class="list-editor-form"><div class="editor-head"><h2>'+
+    (isNew?"New shopping list":"Rename list")+'</h2><button class="editor-close" type="button" data-close-dialog aria-label="Close">×</button></div>'+
+    '<label for="editor-list-name">Name</label><input id="editor-list-name" maxlength="60" required placeholder="Grocery trip" value="'+esc(isNew?"":current?.name||"")+'">'+
+    (isNew?'<label for="editor-list-week">Sale week</label><select id="editor-list-week">'+
+      listWeekChoices().map(([start,end])=>'<option value="'+esc(start)+'"'+
+        (start===(currentAd()?.saleStart||"")?" selected":"")+'>'+
+        esc(dateLabel(start)+"–"+dateLabel(end))+'</option>').join("")+
+      '<option value="">Unscheduled</option></select>':"")+
+    '<div class="editor-buttons"><button type="button" data-close-dialog>Cancel</button><button type="submit">'+
+    (isNew?"Create list":"Save")+'</button></div></form>';
+  document.body.append(dialog);
+  dialog.addEventListener("close",()=>dialog.remove(),{once:true});
+  dialog.querySelectorAll("[data-close-dialog]").forEach(b=>b.onclick=()=>dialog.close());
+  dialog.querySelector("form").onsubmit=e=>{
+    e.preventDefault();
+    const title=dialog.querySelector("#editor-list-name").value.trim();
+    if(!title)return;
+    if(isNew)createShoppingList(title,dialog.querySelector("#editor-list-week").value);
+    else if(current){current.name=title.slice(0,60);save()}
+    dialog.close();
+    draw();
+  };
+  dialog.showModal();
+  dialog.querySelector("#editor-list-name").focus();
+}
+function bindListManager(){
+  const picker=$("#list-picker");
+  if(picker)picker.onchange=e=>{selectShoppingList(e.target.value);draw()};
+  if($("#list-create"))$("#list-create").onclick=()=>openListEditor("new");
+  if($("#list-rename"))$("#list-rename").onclick=()=>openListEditor("rename");
+  if($("#list-discard"))$("#list-discard").onclick=removeOrClearShoppingList;
+}
 function drawShoppingList(el){
   const all=shoppingListRecords();
   const visible=all.filter(e=>(!hideChecked||!e.record.checked)&&
@@ -541,7 +606,7 @@ function drawShoppingList(el){
     if(!grouped.has(c))grouped.set(c,[]);
     grouped.get(c).push(entry);
   }
-  el.innerHTML='<div class="shopping-summary">'+shoppingSummaryHTML(all)+'</div>'+
+  el.innerHTML=listSelectionHTML()+'<div class="shopping-summary">'+shoppingSummaryHTML(all)+'</div>'+
     (all.length?'<div class="list-tools"><span>'+visible.length+' of '+all.length+' products</span>'+
     '<div class="list-tool-actions"><button id="list-toggle-checked" type="button">'+(hideChecked?"Show checked":"Hide checked")+'</button>'+'<button id="list-copy" type="button">Copy list</button></div></div>':
     '<div class="empty">Your list is empty. Add BOGO deals from the Deals tab.</div>')+
@@ -565,6 +630,8 @@ function drawShoppingList(el){
       }).join("")+'</section>').join("")+
     (all.length?'<p class="shopping-footnote">A single item is full price; two cost the regular price of one. Prices vary by store.</p>':"");
   observeImages(visible.map(x=>x.deal));
+  bindListManager();
+  wireCouponDetails(el);
   document.querySelectorAll("[data-check]").forEach(el=>el.onchange=()=>{
     const item=shoppingItems[el.dataset.check];
     if(!item)return;
@@ -581,8 +648,7 @@ function drawShoppingList(el){
     if(!item)return;
     removeShoppingItem(item);
     draw();
-    const count=$("#listbtn");
-    if(count)count.textContent="List ("+shoppingItemCount()+")";
+
   });
   if($("#list-toggle-checked"))$("#list-toggle-checked").onclick=()=>{
     hideChecked=!hideChecked;saveHideChecked();draw();
@@ -656,6 +722,7 @@ if($("#filter-reset"))$("#filter-reset").onclick=()=>{
     weekCatalogs[weekCatalogs.length-1];
   if(chosen){selectedWeekId=chosen.id;deals=[...importedDeals,...chosen.catalog.deals]}
   else deals=[...importedDeals];
+  if(!shoppingLists[activeListId])focusShoppingListForWeek(chosen?.catalog);
   render();
 }
 init();
