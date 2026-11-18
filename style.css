@@ -81,3 +81,12 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .deal .info{flex:0 1 auto;gap:7px}
 .deal .name{min-height:0}
 .deal .size{margin-top:0}
+
+/* v0.9.7: clear week status without adding another large header. */
+.week-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 16px}
+.week-switch button{min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:800;padding:10px 8px;display:flex;flex-direction:column;gap:3px;align-items:center}
+.week-switch button.active{border-color:var(--accent);background:#483714;color:var(--accent-soft)}
+.week-switch small{font-size:11px;font-weight:500;opacity:.9}
+.sale-banner{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:0 0 13px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--muted);font-size:12px}
+.sale-banner .sale-state{font-weight:800;color:var(--accent-soft)}
+.sale-banner.expired .sale-state{color:var(--muted)}
