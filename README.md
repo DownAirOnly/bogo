@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.11.0.**
+**Current app version: v0.11.1.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -21,6 +21,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - Older shopping-list quantities and purchased states migrate safely to weekly list storage the first time v0.11.0 opens; original legacy storage remains untouched.
 - The search bar now fills the header; Lists live in the bottom navigation, without a duplicate top-right button.
 - Coupon overview labels show the named discount/rebate, not a count. The offer title opens the relevant provider website, while a separate chevron reveals conditions and other offers. Provider links are not verified deep links to a specific clipped coupon.
+- Publix coupon names now open the Publix coupon listing with the product keyword filter prefilled. Ibotta and printable coupons open their official provider pages; specific-offer deep links remain unavailable without verified IDs.
 - Existing ad coupon/rebate notes are condensed into expandable product details on deal cards and list rows. The source and conditions remain visible, with direct links to Publix digital coupons and Ibotta. Offers are not automatically clipped or deducted from estimates; availability and eligibility must be verified with each provider.
 
 ## Weekly automation
@@ -31,8 +32,9 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - `scripts/publish_weekly_catalog.py` publishes only newer dated catalogs and protects against GitHub write conflicts.
 - The Pages deployment builds product images for both weeks automatically, restores previously cached photos across weekly catalog changes, and reuses a product-name-indexed image library. Known barcodes are checked before broader image searches.
 - The importer has offline smoke tests in `tests/test_weekly_deals.py`.
+- `scripts/check_weekly_ad.py` and `.github/workflows/test-weekly-ad.yml` provide a read-only, separately triggered live-ad test that ignores publication date ordering and never edits the catalog.
 
-**Important:** These changes establish the automated process, but successful live extraction from the publisher's site has not yet been independently verified. The source can change markup or block automated requests. If a week is missed, the app explicitly displays the dates of its last valid catalog rather than presenting old offers as current.
+**Live diagnostic (November 17, 2026):** A separate GitHub Actions read-only test successfully fetched and parsed the November 12–18 iHeartPublix advertisement: 172 candidate BOGOs, 168 with prices and 7 categories. The parser's two offline smoke tests also passed. See GitHub Actions run 44239657634 (Read-only current Publix BOGO ad test). This does **not** verify that every offer was extracted perfectly, nor does it test the publisher action. The earlier scheduled updater ran successfully but printed "No validated newer ad" because its existing dated catalog was already newer. Full automatic publication remains unverified. The test does not overwrite app deals; failed imports retain previously published data.
 
 ## Catalog
 The default catalog is `data/deals.json`. The optional preview catalog is `data/next-deals.json`. Both use `saleStart`, `saleEnd`, `sourceUrl` and a `deals` array.
