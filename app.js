@@ -135,63 +135,150 @@ try{favoriteNames=new Set(JSON.parse(localStorage.getItem(favoriteNameStorage)||
 function productKey(d){
   return String(d.name||"").split(/\s+[—–]\s+|,/)[0].toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
-const shoppingItemsStorage="bogo-shopping-items-v2",shoppingMigrationKey="bogo-shopping-items-migrated-v2";
-let shoppingItems={},shoppingItemsReady=false;
+const shoppingItemsStorage="bogo-shopping-items-v2";
+const weeklyListsStorage="bogo-weekly-shopping-lists-v1",weeklyListsMigration="bogo-weekly-shopping-migrated-v1";
+let legacyShoppingItems={};
 try{
-  const stored=JSON.parse(localStorage.getItem(shoppingItemsStorage)||"{}");
-  if(stored&&typeof stored==="object"&&!Array.isArray(stored))shoppingItems=stored;
+  const previous=JSON.parse(localStorage.getItem(shoppingItemsStorage)||"{}");
+  if(previous&&typeof previous==="object"&&!Array.isArray(previous))legacyShoppingItems=previous;
+}catch{}
+let shoppingLists={},activeListId="",shoppingItems={},shoppingItemsReady=false;
+try{
+  const saved=JSON.parse(localStorage.getItem(weeklyListsStorage)||"{}");
+  if(saved&&saved.lists&&typeof saved.lists==="object"){
+    shoppingLists=saved.lists;
+    activeListId=String(saved.activeListId||"");
+  }
 }catch{}
 function shoppingItemKey(d){
   return String((d.name||"")+"|"+(d.details||d.size||"")).toLowerCase()
     .normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
-function shoppingItemCount(){return Object.keys(shoppingItems).length}
-function isListed(d){
-  return Boolean(shoppingItems[shoppingItemKey(d)])||
-    (!shoppingItemsReady&&(list.has(d.id)||listNames.has(productKey(d))));
+function currentAd(){return weekCatalogs.find(w=>w.id===selectedWeekId)?.catalog||null}
+function adForDate(date){return weekCatalogs.find(w=>w.catalog.saleStart===date)?.catalog||null}
+function weekListId(date){return "week-"+(date||"general")}
+function weekListName(date,end){
+  return date?"Week "+dateLabel(date)+(end?"–"+dateLabel(end):""):"Unscheduled";
+}
+function ensureWeekList(ad){
+  const date=ad?.saleStart||"general",id=weekListId(date);
+  if(!shoppingLists[id]){
+    shoppingLists[id]={id,name:weekListName(ad?.saleStart,ad?.saleEnd),weekStart:ad?.saleStart||"",
+      weekEnd:ad?.saleEnd||"",default:true,items:{}};
+  }
+  if(!shoppingLists[id].items||typeof shoppingLists[id].items!=="object")
+    shoppingLists[id].items={};
+  return shoppingLists[id];
+}
+function selectedShoppingList(){
+  return shoppingLists[activeListId]||null;
+}
+function targetShoppingList(){
+  const ad=currentAd();
+  if(view==="list"&&selectedShoppingList())return selectedShoppingList();
+  if(ad){
+    const selected=selectedShoppingList();
+    if(selected&&selected.weekStart===ad.saleStart)return selected;
+    return ensureWeekList(ad);
+  }
+  return selectedShoppingList()||ensureWeekList(null);
+}
+function shoppingItemCount(){
+  return Object.keys(targetShoppingList().items).length;
+}
+function isListed(d,listId=null){
+  const target=(listId?shoppingLists[listId]:null)||targetShoppingList();
+  return Boolean(target.items[shoppingItemKey(d)]);
 }
 function isFavorite(d){return favorites.has(d.id)||favoriteNames.has(productKey(d))}
 function save(){
   try{
-    localStorage.setItem(storeKey,JSON.stringify([...list]));
-    localStorage.setItem(listNameStorage,JSON.stringify([...listNames]));
-    localStorage.setItem(shoppingItemsStorage,JSON.stringify(shoppingItems));
-  }catch(error){console.warn("Could not save shopping list",error)}
+    localStorage.setItem(weeklyListsStorage,JSON.stringify({lists:shoppingLists,activeListId}));
+  }catch(error){console.warn("Could not save shopping lists",error)}
+}
+function selectShoppingList(id){
+  if(!shoppingLists[id])return;
+  activeListId=id;
+  shoppingItems=shoppingLists[id].items;
+  save();
+}
+function focusShoppingListForWeek(ad){
+  const list=ensureWeekList(ad);
+  const current=selectedShoppingList();
+  if(!current||current.weekStart!==list.weekStart)selectShoppingList(list.id);
 }
 function snapshotDeal(d){
-  const w=weekCatalogs.find(w=>w.id===selectedWeekId);
+  const ad=currentAd();
   return {id:d.id,name:d.name,details:d.details||d.size||"",category:d.category||"Other",
     price:d.price??null,priceMin:d.priceMin??null,priceMax:d.priceMax??null,
     priceLabel:d.priceLabel||"",coupon:d.coupon||"",image:d.image||"",
-    imageProductCode:d.imageProductCode||"",saleStart:w?.catalog.saleStart||"",
-    saleEnd:w?.catalog.saleEnd||"",quantity:2,checked:false};
+    imageProductCode:d.imageProductCode||"",saleStart:ad?.saleStart||"",
+    saleEnd:ad?.saleEnd||"",quantity:2,checked:false};
 }
-function addShoppingItem(d){
+function addShoppingItem(d,listId=null){
+  const target=(listId?shoppingLists[listId]:null)||targetShoppingList();
   const key=shoppingItemKey(d);
-  if(!key)return;
-  if(shoppingItems[key])return;
-  shoppingItems[key]=snapshotDeal(d);
-  list.add(d.id);listNames.add(productKey(d));save();
-}
-function removeShoppingItem(d){
-  const key=shoppingItemKey(d);
-  delete shoppingItems[key];
-  list.delete(d.id);listNames.delete(productKey(d));
+  if(!key||target.items[key])return;
+  target.items[key]={...snapshotDeal(d),saleStart:target.weekStart||"",
+    saleEnd:target.weekEnd||""};
   save();
 }
-function toggleShoppingItem(d){isListed(d)?removeShoppingItem(d):addShoppingItem(d)}
-function migrateShoppingItems(){
-  if(localStorage.getItem(shoppingMigrationKey)==="yes"){shoppingItemsReady=true;return}
-  const known=[...importedDeals,...weekCatalogs.flatMap(w=>w.catalog.deals)];
-  for(const d of known){
-    if((list.has(d.id)||listNames.has(productKey(d)))&&!shoppingItems[shoppingItemKey(d)]){
-      shoppingItems[shoppingItemKey(d)]=snapshotDeal(d);
+function removeShoppingItem(d,listId=null){
+  const target=(listId?shoppingLists[listId]:null)||targetShoppingList();
+  delete target.items[shoppingItemKey(d)];
+  save();
+}
+function toggleShoppingItem(d,listId=null){
+  isListed(d,listId)?removeShoppingItem(d,listId):addShoppingItem(d,listId);
+}
+function createShoppingList(name,weekStart){
+  const ad=adForDate(weekStart);
+  const fallback=Object.values(shoppingLists).find(x=>x.weekStart===weekStart);
+  const id="custom-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
+  shoppingLists[id]={id,name:name.trim().slice(0,60)||"Shopping trip",
+    weekStart:weekStart||"",weekEnd:ad?.saleEnd||fallback?.weekEnd||"",
+    default:false,items:{}};
+  selectShoppingList(id);
+  return id;
+}
+function removeOrClearShoppingList(){
+  const selected=selectedShoppingList();
+  if(!selected)return;
+  if(selected.default){
+    if(confirm("Clear all products from "+selected.name+"?")){
+      selected.items={};shoppingItems=selected.items;save();render();
     }
+  }else if(confirm('Delete "'+selected.name+'" and its saved products?')){
+    delete shoppingLists[selected.id];
+    const ad=adForDate(selected.weekStart);
+    selectShoppingList(ensureWeekList(ad||{saleStart:selected.weekStart,saleEnd:selected.weekEnd}).id);
+    render();
+  }
+}
+function migrateShoppingItems(){
+  for(const week of weekCatalogs)ensureWeekList(week.catalog);
+  if(!Object.keys(shoppingLists).length)ensureWeekList(null);
+  if(localStorage.getItem(weeklyListsMigration)!=="yes"){
+    // The earlier app only had one list. Copy it into the date of the ad
+    // that was selected at migration. The original storage is left intact.
+    const initial=ensureWeekList(currentAd());
+    for(const [key,record] of Object.entries(legacyShoppingItems)){
+      if(record&&record.name&&!initial.items[key])initial.items[key]=record;
+    }
+    if(!Object.keys(legacyShoppingItems).length){
+      const known=[...importedDeals,...weekCatalogs.flatMap(w=>w.catalog.deals)];
+      for(const d of known){
+        if((list.has(d.id)||listNames.has(productKey(d)))&&!initial.items[shoppingItemKey(d)])
+          initial.items[shoppingItemKey(d)]=snapshotDeal(d);
+      }
+    }
+    try{localStorage.setItem(weeklyListsMigration,"yes")}catch{}
   }
   shoppingItemsReady=true;
+  if(!shoppingLists[activeListId])activeListId=ensureWeekList(currentAd()).id;
+  shoppingItems=shoppingLists[activeListId].items;
   save();
-  try{localStorage.setItem(shoppingMigrationKey,"yes")}catch{}
 }
 function saveFavorites(){localStorage.setItem("bogo-favorites-v1",JSON.stringify([...favorites]));localStorage.setItem(favoriteNameStorage,JSON.stringify([...favoriteNames]))}function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}// Product photos are resolved inside the app. No manual photo links or user setup.
 const imageCacheKey="bogo-product-photos-v3";
