@@ -5,6 +5,7 @@ Approvals require an exact product match or an explicitly labeled representative
 variant. Image caching is handled separately by cache_images.py.
 """
 import json
+import re
 from pathlib import Path
 catalog_path=Path("data/deals.json")
 database_path=Path("data/product-images.json")
@@ -12,7 +13,8 @@ catalog=json.loads(catalog_path.read_text())
 database=json.loads(database_path.read_text())
 count=0
 for deal in catalog["deals"]:
-    record=database.get("products",{}).get(deal["id"])
+    key=re.sub(r"[^a-z0-9]+","-",deal["name"].lower()).strip("-")
+    record=database.get("products",{}).get(key)
     if not record or record.get("status")!="approved":continue
     image=record.get("imageUrl","")
     if not image.startswith("https://"):continue
