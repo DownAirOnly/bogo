@@ -2,6 +2,13 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.8.0 — November 17, 2026
+- Added scheduled Wednesday/Thursday weekly-ad discovery.
+- Added manual iHeartPublix ad URL workflow dispatch.
+- Added date, offer-count and price validation with fail-safe retention of the previous catalog.
+- Added conflict-safe publishing and automatic photo-cache refresh when the catalog changes.
+- The weekly extractor has not yet been validated against a newly published live ad.
+
 ## v0.7.1 — November 17, 2026
 - Added Wikimedia Commons as an additional candidate-image source.
 - Reattempts image searches that previously returned no candidates.
