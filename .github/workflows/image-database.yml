@@ -1,10 +1,6 @@
 name: Build product photo candidate database
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - scripts/build_image_database.py
-      - .github/workflows/image-database.yml
 permissions:
   contents: write
 concurrency:
