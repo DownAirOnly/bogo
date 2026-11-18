@@ -40,7 +40,19 @@
     "snack-factory-pretzel-crisps": {
       "dealName": "Snack Factory Pretzel Crisps",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Pretzel-Crisps.jpg",
+          "brand": "",
+          "quantity": "",
+          "barcode": "",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pretzel-Crisps.jpg/960px-Pretzel-Crisps.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "source": "Wikimedia Commons",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:Pretzel-Crisps.jpg",
+          "license": "Public domain",
+          "matchScore": 0.542
+        }
+      ]
     },
     "stacy-s-pita-chips-bagel-or-thins": {
       "dealName": "Stacy’s Pita Chips, Bagel or Thins",
