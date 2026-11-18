@@ -76,3 +76,26 @@ for q in PRODUCTS:
 
 # Separate apostrophe-free query to check why Hunt's is returning K-pop results.
 check("Hunts Canned Tomatoes","bing")
+
+import re
+from urllib.parse import urlsplit
+
+def ddg(q):
+    term=q+" grocery food package"
+    url="https://duckduckgo.com/?" + urlencode({"q":term,"iax":"images","ia":"images"})
+    try:
+        landing=photo.get(url,limit=800_000,timeout=8).decode("utf-8","ignore")
+        vqd=re.search(r'vqd[=:" ]+([0-9-]+)',landing) or re.search(r'vqd=([0-9-]+)',landing)
+        if not vqd:
+            print("DDG",q,"landing",len(landing),"no vqd",re.findall(r"<title[^>]*>(.*?)</title>",landing,re.I|re.S)[:1],flush=True)
+            return
+        img_url="https://duckduckgo.com/i.js?"+urlencode({"q":term,"vqd":vqd.group(1),"o":"json","l":"us-en","p":"1"})
+        body=photo.get(img_url,limit=2_000_000,timeout=8).decode("utf-8","ignore")
+        data=json.loads(body)
+        items=data.get("results") or []
+        print("DDG",q,"results",len(items),"first",[(x.get("title","")[:80],urlsplit(x.get("thumbnail","")).hostname) for x in items[:5]],flush=True)
+    except Exception as e:
+        print("DDG",q,"FAILED",type(e).__name__,str(e)[:160],flush=True)
+
+for q in ["Idahoan Mashed Potatoes","Del Monte Vegetables","Betty Crocker Brownie Mix","Hunts Canned Tomatoes","Rotel Tomatoes"]:
+    ddg(q)
