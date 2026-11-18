@@ -104,7 +104,7 @@ def barcode_images(d):
         url = "https://world.openfoodfacts.org/api/v2/product/" + code + ".json?" + urlencode({
             "fields": "product_name,brands,image_front_url,image_url"
         })
-        product = json.loads(get(url, timeout=6)).get("product", {})
+        product = json.loads(get(url, timeout=4)).get("product", {})
         image = product.get("image_front_url") or product.get("image_url")
         return [image] if allowed_image(image) else []
     except Exception:
@@ -118,7 +118,7 @@ def food_facts_images(q):
         "fields": "product_name,product_name_en,brands,image_front_url,image_url"
     })
     try:
-        j = json.loads(get("https://world.openfoodfacts.org/api/v2/search?" + params, timeout=7))
+        j = json.loads(get("https://world.openfoodfacts.org/api/v2/search?" + params, timeout=4))
     except Exception: return []
     found = []
     for product in j.get("products", []):
@@ -144,7 +144,7 @@ def google_labeled_images(q):
         "tbm": "isch", "q": q + " grocery can package product front", "num": 20, "safe": "active"
     })
     try:
-        body = get(url, limit=1_500_000, timeout=7).decode("utf-8", "ignore")
+        body = get(url, limit=1_500_000, timeout=4).decode("utf-8", "ignore")
     except Exception:
         return []
     class Results(HTMLParser):
@@ -170,7 +170,7 @@ def bing_labeled_images(q):
         "q": q + " grocery can package front", "first": 1, "adlt": "strict"
     })
     try:
-        body = get(url, limit=1_500_000, timeout=7).decode("utf-8", "ignore")
+        body = get(url, limit=1_500_000, timeout=4).decode("utf-8", "ignore")
     except Exception:
         return []
     class Results(HTMLParser):
@@ -195,7 +195,7 @@ def bing_labeled_images(q):
 def save_photo(url, dest):
     if not allowed_image(url): return False
     try:
-        raw = get(url, timeout=8)
+        raw = get(url, timeout=5)
         with Image.open(BytesIO(raw)) as source:
             if min(source.size) < 72 or max(source.size) / min(source.size) > 3.5:
                 return False  # Tiny badges and extreme banners are not useful product photos.
@@ -257,7 +257,7 @@ def main():
         if key and valid_cached(OUTPUT / filename):
             PHOTO_INDEX[key] = filename
     counts = {"saved":0, "existing":0, "reused":0, "missing":0, "skipped":0}
-    with ThreadPoolExecutor(max_workers=6) as pool:
+    with ThreadPoolExecutor(max_workers=10) as pool:
         futures = [pool.submit(build, deal) for deal in deals]
         for f in as_completed(futures):
             try: counts[f.result()] += 1
