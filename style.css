@@ -74,3 +74,10 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .photo-placeholder.has-photo{background:#f0e6d7;gap:0;padding:9px}
 .photo-placeholder.has-photo img{background:transparent!important;border-radius:4px!important;mix-blend-mode:multiply;filter:none}
 .each{font-size:12px;font-weight:700;letter-spacing:.01em;line-height:1.35;color:var(--accent-soft)}
+
+/* v0.9.6: naturally sized deal cards, no artificial space above the size line. */
+.grid{align-items:start}
+.deal{align-self:start}
+.deal .info{flex:0 1 auto;gap:7px}
+.deal .name{min-height:0}
+.deal .size{margin-top:0}
