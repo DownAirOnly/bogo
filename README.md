@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.11.2.**
+**Current app version: v0.11.4.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -54,3 +54,10 @@ BOGO prices and coupon eligibility vary by location; the displayed amounts are p
 - Add receipt/tax-adjusted totals and eventual cross-device sync for named lists.
 - Add new-deal highlights and eventually more targeted grocery subcategories when the data supports them.
 - Verify coupon eligibility, stacking and redemption with supported retailer integrations before estimating coupon-adjusted totals; add optional alerts.
+
+## Image relevance fix (November 18, 2026)
+- The original image search accepted unrelated thumbnails; a temporary strict matcher reduced coverage to 26 of 322 products.
+- A read-only search-source diagnostic found that DuckDuckGo's public image search returns explicit product titles and retailer page references, whereas Google's returned HTML did not expose usable labeled thumbnails and Bing sometimes returned unrelated results.
+- The automatic builder now matches product words, rejects obvious games/recipes/stock artwork, and prioritizes retail source pages when selecting a thumbnail. The original unchecked photo cache remains excluded.
+- The first successful expanded image build found 303 of 322 images (298 added, 5 reused; 19 missing); subsequent deployments use unique cache keys so improvements persist across builds.
+- Remaining placeholders are deliberately understated. Search titles are evidence of likely relevance, not visual verification of every photo.
