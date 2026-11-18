@@ -52,3 +52,12 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .picture{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 150px;height:150px;min-height:150px;max-height:150px;overflow:hidden;contain:layout paint;line-height:1.35}
 .picture img{display:block;position:static!important;flex:none;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center;background:transparent}
 .info{position:relative;z-index:1;min-width:0;background:var(--surface)}
+
+/* v0.6.1: compact version access, accessible changelog, predictable product media */
+.header-inner{justify-content:space-between}
+.version-trigger{border:0;background:transparent;color:var(--muted);font:600 11px 'DM Sans',sans-serif;padding:10px 0 10px 10px}
+.version-trigger:focus-visible{outline:2px solid var(--accent);border-radius:5px}
+.changelog h3{font:700 15px 'Outfit',sans-serif;margin:16px 0 3px}
+.changelog p{margin:0 0 10px}
+.picture{padding:10px}
+.picture img{background:#fffdf9;border-radius:9px;object-fit:contain!important}
