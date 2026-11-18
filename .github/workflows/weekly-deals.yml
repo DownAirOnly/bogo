@@ -1,5 +1,11 @@
 name: Update weekly Publix BOGO deals
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/update_weekly_deals.py'
+      - '.github/workflows/weekly-deals.yml'
+      - 'tests/test_weekly_deals.py'
   schedule:
     - cron: '20 12 * * *'
     - cron: '20 20 * * 3,4,5'
@@ -19,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check BOGO parser against offline sample
+        run: python -m unittest discover -s tests -p 'test_weekly_deals.py'
       - name: Extract and validate current and upcoming weekly offers
         env:
           AD_URL: ${{ inputs.ad_url }}
