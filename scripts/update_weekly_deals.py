@@ -65,12 +65,12 @@ def parse(lines,start):
         line=re.sub(r"\s+"," ",line).strip()
         if re.search(r"buy one get one free|\bBOGO\b",line,re.I):active=True
         if any(line.lower().startswith(x.lower()) for x in categories):cat=next(x for x in categories if line.lower().startswith(x.lower()))
-        if not active or len(line)<12 or len(line)>450:continue
+        if not active or len(line)<12 or len(line)>450 or not re.search(r"\\bBOGO\\b",line,re.I):continue
         if re.search(r"coupon|subscribe|advertis|printable|terms|privacy|comment",line,re.I):continue
         # Require explicit price; do not manufacture missing prices.
         match=re.search(r"\$\s*(\d+\.\d{2})(?:\s*[-–]\s*\$?\s*(\d+\.\d{2}))?",line)
         if not match:continue
-        name=line[:match.start()].strip(" ,–:-")
+        name=re.sub(r",?\\s*BOGO\\s*$","",line[:match.start()],flags=re.I).strip(" ,–:-")
         if len(name)<8 or len(name)>180:continue
         if re.search(r"\b(save|off|coupon|limit|each|regular price)\b",name,re.I):continue
         key=re.sub(r"[^a-z0-9]+","-",name.lower()).strip("-")
