@@ -33,10 +33,10 @@ jobs:
       - name: Restore previously found product photos
         uses: actions/cache@v4
         with:
-          path: images/products
-          key: bogo-product-photos-${{ hashFiles('data/current-deals.json', 'data/deals.json', 'data/next-deals.json') }}
+          path: images/verified-products
+          key: bogo-verified-photos-${{ hashFiles('data/current-deals.json', 'data/deals.json', 'data/next-deals.json') }}
           restore-keys: |
-            bogo-product-photos-
+            bogo-verified-photos-
       - name: Find and cache product photos automatically
         timeout-minutes: 8
         continue-on-error: true
