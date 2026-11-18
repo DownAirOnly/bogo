@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
+import shutil
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 from PIL import Image, ImageOps
@@ -18,11 +19,25 @@ import re
 
 CATALOGS = [Path("data/deals.json"), Path("data/next-deals.json")]
 OUTPUT = Path("images/products")
+INDEX_PATH = OUTPUT / "photo-index.json"
+PHOTO_INDEX = {}
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; bogo-product-photo/1.0; personal grocery guide)",
     "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*",
 }
 STOP = {"the", "and", "for", "with", "size", "pack", "products", "organic", "assorted", "variety"}
+def photo_key(deal):
+    # Preserve the complete product name; never merge different flavors
+    # just because the first few words match.
+    return " ".join(tokens(deal.get("name") or deal.get("searchQuery") or ""))
+
+def valid_cached(path):
+    try:
+        path = Path(path)
+        return path.is_file() and path.suffix == ".webp" and path.stat().st_size > 500
+    except OSError:
+        return False
+
 def tokens(s):
     return [w for w in re.findall(r"[a-z0-9]+", (s or "").lower()) if len(w)>2 and w not in STOP]
 def query_for(d):
@@ -126,7 +141,18 @@ def build(d):
     ident = re.sub(r"[^A-Za-z0-9_-]", "-", str(d.get("id", "")))[:85]
     if not ident: return "skipped"
     target = OUTPUT / (ident + ".webp")
-    if target.exists() and target.stat().st_size > 500: return "existing"
+    if valid_cached(target): return "existing"
+    key = photo_key(d)
+    cached_name = PHOTO_INDEX.get(key, "")
+    # Restore a previously found photo when the weekly deal ID changes.
+    if cached_name and re.fullmatch(r"[A-Za-z0-9_-]+\.webp", cached_name):
+        cached = OUTPUT / cached_name
+        if cached != target and valid_cached(cached):
+            try:
+                shutil.copyfile(cached, target)
+                return "reused"
+            except OSError:
+                pass
     q = query_for(d)
     if not q: return "missing"
     # First use the top Google image result, as requested; search public
@@ -144,7 +170,19 @@ def main():
     deals = list(deals_by_id.values())
     if not deals: return
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    counts = {"saved":0, "existing":0, "missing":0, "skipped":0}
+    global PHOTO_INDEX
+    try:
+        previous = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
+        PHOTO_INDEX = previous if isinstance(previous, dict) else {}
+    except (OSError, ValueError):
+        PHOTO_INDEX = {}
+    # Seed index from legacy/local image files in the current catalog.
+    for deal in deals:
+        key = photo_key(deal)
+        filename = re.sub(r"[^A-Za-z0-9_-]", "-", str(deal.get("id", "")))[:85] + ".webp"
+        if key and valid_cached(OUTPUT / filename):
+            PHOTO_INDEX[key] = filename
+    counts = {"saved":0, "existing":0, "reused":0, "missing":0, "skipped":0}
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = [pool.submit(build, deal) for deal in deals]
         for f in as_completed(futures):
@@ -152,6 +190,17 @@ def main():
             except Exception as exc:
                 print("Photo lookup error:", str(exc)[:120])
                 counts["missing"] += 1
+    # Save only validated paths, not failed search URLs, for future deployments.
+    for deal in deals:
+        key = photo_key(deal)
+        filename = re.sub(r"[^A-Za-z0-9_-]", "-", str(deal.get("id", "")))[:85] + ".webp"
+        if key and valid_cached(OUTPUT / filename):
+            PHOTO_INDEX[key] = filename
+    PHOTO_INDEX = {
+        key: filename for key, filename in PHOTO_INDEX.items()
+        if re.fullmatch(r"[A-Za-z0-9_-]+\.webp", filename) and valid_cached(OUTPUT / filename)
+    }
+    INDEX_PATH.write_text(json.dumps(PHOTO_INDEX, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("Automatic product photos:", counts)
 if __name__ == "__main__":
     main()
