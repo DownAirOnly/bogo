@@ -349,6 +349,12 @@ function changeWeek(id){
 }
 // One-page shopping checklist. Estimates assume Publix BOGO is buy two,
 // pay the shelf price of one. Odd quantities pay for the extra individual item.
+const hideCheckedStorage="bogo-hide-checked-v1";
+let hideChecked=false;
+try{hideChecked=localStorage.getItem(hideCheckedStorage)==="yes"}catch{}
+function saveHideChecked(){
+  try{localStorage.setItem(hideCheckedStorage,hideChecked?"yes":"no")}catch{}
+}
 function quantityOf(record){
   const n=Number(record.quantity);
   return Number.isInteger(n)?Math.min(99,Math.max(1,n)):2;
@@ -396,7 +402,7 @@ function shoppingTotals(records){
 }
 function shoppingSummaryHTML(records){
   const t=shoppingTotals(records);
-  return '<div class="shopping-progress"><strong>Shopping list</strong><span>'+t.checked+' of '+t.total+' checked</span></div>'+
+  return '<div class="shopping-progress"><strong>Shopping list</strong><span>'+t.checked+' of '+t.total+' checked</span></div>'+'<div class="shopping-progress-track" role="progressbar" aria-label="Items checked" aria-valuemin="0" aria-valuemax="'+t.total+'" aria-valuenow="'+t.checked+'"><span style="width:'+(t.total?Math.round(t.checked/t.total*100):0)+'%"></span></div>'+
     '<div class="shopping-totals"><div><span>Estimated spend</span><strong>'+(t.priced?moneyRange(t.low,t.high):"—")+'</strong></div>'+
     '<div><span>BOGO savings</span><strong>'+(t.priced?moneyRange(t.savedLow,t.savedHigh):"—")+'</strong></div></div>'+
     '<p class="shopping-disclaimer">Estimates use two-for-one pricing, without tax or coupons.'+
@@ -420,7 +426,8 @@ function updateShoppingListUI(){
 }
 function drawShoppingList(el){
   const all=shoppingListRecords();
-  const visible=all.filter(e=>(e.deal.name+" "+(e.deal.details||"")).toLowerCase().includes(search.toLowerCase()));
+  const visible=all.filter(e=>(!hideChecked||!e.record.checked)&&
+    (e.deal.name+" "+(e.deal.details||"")).toLowerCase().includes(search.toLowerCase()));
   const grouped=new Map();
   for(const entry of visible){
     const c=entry.deal.category||"Other";
@@ -429,9 +436,9 @@ function drawShoppingList(el){
   }
   el.innerHTML='<div class="shopping-summary">'+shoppingSummaryHTML(all)+'</div>'+
     (all.length?'<div class="list-tools"><span>'+visible.length+' of '+all.length+' products</span>'+
-    '<button id="list-copy" type="button">Copy list</button></div>':
+    '<div class="list-tool-actions"><button id="list-toggle-checked" type="button">'+(hideChecked?"Show checked":"Hide checked")+'</button>'+'<button id="list-copy" type="button">Copy list</button></div></div>':
     '<div class="empty">Your list is empty. Add BOGO deals from the Deals tab.</div>')+
-    (all.length&&!visible.length?'<div class="empty">No saved items match your search.</div>':"")+
+    (all.length&&!visible.length?'<div class="empty">'+(hideChecked&&all.every(e=>e.record.checked)?"Everything is checked off. Use Show checked to review.":"No items match the current view.")+'</div>':"")+
     [...grouped.entries()].map(([group,entries])=>
       '<section class="list-category"><h3>'+esc(group)+' <span>'+entries.length+'</span></h3>'+
       entries.map(e=>{
@@ -454,7 +461,7 @@ function drawShoppingList(el){
   document.querySelectorAll("[data-check]").forEach(el=>el.onchange=()=>{
     const item=shoppingItems[el.dataset.check];
     if(!item)return;
-    item.checked=el.checked;save();updateShoppingListUI();
+    item.checked=el.checked;save();if(hideChecked&&item.checked)draw();else updateShoppingListUI();
   });
   document.querySelectorAll("[data-step]").forEach(btn=>btn.onclick=()=>{
     const item=shoppingItems[btn.dataset.step];
@@ -470,6 +477,9 @@ function drawShoppingList(el){
     const count=$("#listbtn");
     if(count)count.textContent="List ("+shoppingItemCount()+")";
   });
+  if($("#list-toggle-checked"))$("#list-toggle-checked").onclick=()=>{
+    hideChecked=!hideChecked;saveHideChecked();draw();
+  };
   if($("#list-copy"))$("#list-copy").onclick=()=>{
     const text=all.map(e=>(e.record.checked?"✓ ":"☐ ")+quantityOf(e.record)+" × "+e.deal.name+
       " — "+(estimateShoppingItem(e).available?listEstimateText(e):"Price not confirmed")).join("\n");
