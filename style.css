@@ -90,3 +90,17 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .sale-banner{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:0 0 13px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--muted);font-size:12px}
 .sale-banner .sale-state{font-weight:800;color:var(--accent-soft)}
 .sale-banner.expired .sale-state{color:var(--muted)}
+
+/* v0.9.9: compact sort and optional filters, matching the existing app shell. */
+.browse-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:end;margin:0 0 14px}
+.sort-control{display:flex;flex-direction:column;gap:5px;min-width:0;color:var(--muted);font-size:11px;font-weight:700}
+.sort-control select,.filter-limit select{width:100%;min-width:0;min-height:42px;padding:9px 35px 9px 11px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:11px;font-size:13px;font-weight:700}
+.browse-filter-toggle{min-width:91px;min-height:42px;margin:0;white-space:nowrap}
+.browse-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:-2px 0 16px;padding:13px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
+.browse-filters[hidden]{display:none}
+.filter-check{display:flex;gap:8px;align-items:center;color:var(--text);font-size:12px;line-height:1.35;min-height:34px;cursor:pointer}
+.filter-check input{width:18px;height:18px;min-width:18px;padding:0;margin:0;accent-color:var(--accent)}
+.filter-limit{grid-column:1/-1;display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px;color:var(--muted)}
+.filter-limit span{flex:1}
+.filter-limit select{width:auto;min-width:132px}
+.filter-reset{grid-column:1/-1;justify-self:end;border:0;background:none;color:var(--accent-soft);font-size:12px;font-weight:700;padding:5px 0}
