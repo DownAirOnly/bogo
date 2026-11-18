@@ -250,3 +250,11 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 
 /* v0.11.6 — Quiet weekly change indicators, visible only with a prior ad. */
 .deal-new-marker{display:inline-block;width:max-content;max-width:100%;padding:3px 7px;margin:0 0 7px;border:1px solid rgba(242,197,113,.38);border-radius:6px;color:var(--accent-soft);background:rgba(242,197,113,.08);font-size:10px;line-height:1.25;font-weight:800;letter-spacing:.01em}
+
+/* v0.12.0: remaining grocery budget and native sharing. */
+.shopping-remaining{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:10px;padding:9px 10px;background:var(--surface2);border-radius:10px}
+.shopping-remaining span{font-size:12px;font-weight:700;color:var(--muted)}
+.shopping-remaining strong{font:700 16px/1.2 'Outfit',sans-serif;color:var(--text);text-align:right}
+.list-tool-actions{gap:5px}
+.list-tool-actions button{min-height:34px}
+@media(max-width:365px){.list-tools{align-items:start}.list-tool-actions button{padding:7px 8px;font-size:11px}.shopping-remaining strong{font-size:14px}}
