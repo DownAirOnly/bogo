@@ -2,6 +2,12 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.7.1 — November 17, 2026
+- Added Wikimedia Commons as an additional candidate-image source.
+- Reattempts image searches that previously returned no candidates.
+- Replaced repetitive missing-photo text with styled category placeholders.
+- No new product photographs are claimed until reviewed and cached.
+
 ## v0.7.0 — November 17, 2026
 - Added a persistent product-photo candidate database keyed by normalized product names.
 - Added scheduled incremental image discovery, with suggestions held for review.
