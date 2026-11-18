@@ -1,7 +1,8 @@
 name: Update weekly Publix BOGO deals
 on:
   schedule:
-    - cron: '20 12 * * 3,4'
+    - cron: '20 12 * * *'
+    - cron: '20 20 * * 3,4,5'
   workflow_dispatch:
     inputs:
       ad_url:
@@ -18,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extract and validate current weekly offers
+      - name: Extract and validate current and upcoming weekly offers
         env:
           AD_URL: ${{ inputs.ad_url }}
         run: |
@@ -31,8 +32,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! git diff --quiet -- data/deals.json; then
+          if ! git diff --quiet -- data/deals.json data/next-deals.json || [ -n "$(git ls-files --others --exclude-standard data/next-deals.json)" ]; then
             python scripts/publish_weekly_catalog.py
           else
-            echo "No validated catalog change. Keeping the last successful data."
+            echo "No validated catalog change. Keeping existing weeks."
           fi
