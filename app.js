@@ -573,8 +573,8 @@ function openListEditor(mode){
     (isNew?'<label for="editor-list-week">Sale week</label><select id="editor-list-week">'+
       listWeekChoices().map(([start,end])=>'<option value="'+esc(start)+'"'+
         (start===(currentAd()?.saleStart||"")?" selected":"")+'>'+
-        esc(dateLabel(start)+"–"+dateLabel(end))+'</option>').join("")+
-      '<option value="">Unscheduled</option></select>':"")+
+        esc(dateLabel(start)+"–"+dateLabel(end)+" ("+start.slice(0,4)+")")+'</option>').join("")+
+      (listWeekChoices().length?"":'<option value="">Unscheduled</option>')+'</select>':"")+
     '<div class="editor-buttons"><button type="button" data-close-dialog>Cancel</button><button type="submit">'+
     (isNew?"Create list":"Save")+'</button></div></form>';
   document.body.append(dialog);
@@ -835,7 +835,9 @@ wireCouponDetails(el);if($("#copy"))$("#copy").onclick=()=>navigator.clipboard.w
     weekCatalogs[weekCatalogs.length-1];
   if(chosen){selectedWeekId=chosen.id;deals=[...importedDeals,...chosen.catalog.deals]}
   else deals=[...importedDeals];
-  if(!shoppingLists[activeListId])focusShoppingListForWeek(chosen?.catalog);
+  const selected=selectedShoppingList();
+  if(!selected||(chosen&&selected.default&&selected.weekStart!==chosen.catalog.saleStart))
+    focusShoppingListForWeek(chosen?.catalog);
   render();
 }
 init();
