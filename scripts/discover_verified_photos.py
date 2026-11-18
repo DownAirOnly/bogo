@@ -4,7 +4,7 @@
 Only exact brand/product token matches and matching package sizes qualify.
 Ambiguous offers remain review candidates. Never fabricates a photograph.
 """
-import json,re,time,urllib.parse,urllib.request
+import json,re,time,urllib.parse,urllib.request,os
 from pathlib import Path
 from urllib.error import HTTPError,URLError
 
@@ -14,14 +14,16 @@ def norm(s):return re.sub(r"[^a-z0-9]+","-",s.lower()).strip("-")
 def tokens(s):return set(re.findall(r"[a-z0-9]+",s.lower()))-STOP
 def request(url):
     req=urllib.request.Request(url,headers={"User-Agent":"bogo-product-images/1.0 (https://github.com/DownAirOnly/bogo)","Accept":"application/json"})
-    with urllib.request.urlopen(req,timeout=22) as r:return json.load(r)
+    with urllib.request.urlopen(req,timeout=8) as r:return json.load(r)
 def fetch(q):
     params=urllib.parse.urlencode({"search_terms":q,"page_size":15,"fields":"code,product_name,brands,quantity,image_front_url"})
     urls=["https://world.openfoodfacts.org/api/v2/search?"+params,
           "https://world.openfoodfacts.net/api/v2/search?"+params]
     for url in urls:
         try:return request(url).get("products",[])
-        except (HTTPError,URLError,TimeoutError,ValueError) as exc:print("Source error:",type(exc).__name__,str(exc)[:70])
+        except (HTTPError,URLError,TimeoutError,ValueError) as exc:
+            print("Source error:",type(exc).__name__,str(exc)[:70])
+            if isinstance(exc,HTTPError) and exc.code in (429,503):break
     return []
 def match(d,p):
     name=(p.get("product_name") or "").strip();brand=(p.get("brands") or "").strip()
@@ -42,16 +44,21 @@ def match(d,p):
             "imageUrl":url,"source":"Open Food Facts","matchScore":score,"exactMatch":approved}
 def main():
     catalog=json.loads(CAT.read_text());db=json.loads(DB.read_text());cands=json.loads(CAND.read_text())
-    tried=0;approved=0;found=0
+    tried=0;approved=0;found=0;failures=0
     for d in catalog["deals"]:
-        if tried>=30:break
+        if tried>=30 or failures>=4:break
         if d.get("image") or "beer" in d["category"].lower() or "wine" in d["category"].lower():continue
         key=norm(d["name"])
         if key in db["products"]:continue
         if key in cands["products"]:continue
         tried+=1
         q=re.split(r"\s+[—–]\s+|\s+or\s+",d["name"])[0]
-        options=[x for p in fetch(q) if (x:=match(d,p))]
+        products=fetch(q)
+        if not products:
+            failures+=1
+            continue  # Do not permanently mark a product as searched during an outage.
+        failures=0
+        options=[x for p in products if (x:=match(d,p))]
         options.sort(key=lambda x:-x["matchScore"])
         if options:found+=1
         confident=[x for x in options if x["exactMatch"]]
@@ -62,7 +69,7 @@ def main():
             approved+=1
         else:
             cands["products"][key]={"dealName":d["name"],"status":"needs-review","options":options[:5]}
-        time.sleep(0.8)
+        time.sleep(0.5)
     DB.write_text(json.dumps(db,ensure_ascii=False,indent=2)+"\n")
     CAND.write_text(json.dumps(cands,ensure_ascii=False,indent=2)+"\n")
     print(f"Processed {tried}; suggestions for {found}; strictly approved {approved}")
