@@ -2,6 +2,20 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.12.3 — November 18, 2026
+- Remember the selected weekly ad across PWA launches until its dates expire or it is no longer available.
+- Cache new-vs-returning comparison results for faster browsing on iPhone, and summarize newly advertised items in the weekly date banner.
+
+## v0.12.2 — November 18, 2026
+- Interpret simple coupon and rebate purchase quantity requirements in source notes, without assuming account eligibility.
+- Show an understated quantity reminder in shopping lists and product details only when all listed offers require more items than currently selected.
+- Never apply potential coupon savings automatically.
+
+## v0.12.1 — November 18, 2026
+- Add fast pre-deployment integrity checks for JavaScript syntax, catalog dates, price ranges, product IDs, and the weekly parser.
+- If all weekly catalogs fail to load, present a clear retry option instead of silently showing an empty ad.
+- When optional filters produce no results, provide a quick reset action.
+
 ## v0.12.0 — November 18, 2026
 - Shopping lists now show **Still to buy** as a separate estimate excluding already checked products, while preserving full-trip spending and BOGO savings.
 - Share lists through iPhone's native share sheet; use Copy as a fallback, including quantities, checked states, prices and limitations.
