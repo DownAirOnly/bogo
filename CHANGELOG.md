@@ -2,6 +2,13 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.11.1 — November 17, 2026
+- Added a separate read-only live test for the current November 12–18 Publix ad. It does not publish or modify catalog data.
+- Successful GitHub Actions run 44239657634 extracted 172 BOGO candidates, with prices on 168, across 7 categories.
+- Identified that normal imports skipped the active week because the stored catalog was already dated November 19–25.
+- Added the product keyword filter to Publix coupon-name links; Ibotta and printable offers retain their provider links.
+- Full live publication and individual-offer deep links remain unverified.
+
 ## v0.11.0 — November 17, 2026
 - Replaced the large Favorite and Add to List buttons with black corner controls overlaying product images: red active heart, blue active list button.
 - Made images and a smaller More button open a product details sheet with list selection, quantity stepper, favorite status and coupon notes.
