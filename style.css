@@ -239,3 +239,11 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .photo-missing-label{max-width:90%;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:.01em;color:#857358}
 .list-thumb .photo-missing-icon{width:25px;height:25px;font-size:13px}
 .list-thumb .photo-missing-label{font-size:8px}
+
+/* v0.11.5: low-friction carry-forward between different sale weeks. */
+.list-carry-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding:11px 0 0;border-top:1px solid var(--border)}
+.list-carry-row span{font-size:11px;line-height:1.35;color:var(--muted)}
+.list-carry-row button{flex-shrink:0;max-width:72%;min-height:34px;padding:7px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-size:11px;font-weight:800;text-align:center}
+.list-carry-row button:active{border-color:var(--accent);color:var(--accent-soft)}
+.list-carry-notice{font-size:11px;line-height:1.45;color:var(--accent-soft);margin:9px 0 0}
+@media(max-width:360px){.list-carry-row{align-items:flex-start;flex-direction:column}.list-carry-row button{max-width:100%}}
