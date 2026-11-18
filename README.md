@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.9.7.**
+**Current app version: v0.9.8.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -18,7 +18,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - It extracts BOGO listings, price ranges and no-price offers, classifies grocery categories and validates catalog size, prices, categories and sale dates.
 - Valid previews are staged as `data/next-deals.json`; they become `data/deals.json` when their sale week begins. Failures retain the existing catalogs.
 - `scripts/publish_weekly_catalog.py` publishes only newer dated catalogs and protects against GitHub write conflicts.
-- The Pages deployment builds product images for both weeks automatically.
+- The Pages deployment builds product images for both weeks automatically, restores previously cached photos across weekly catalog changes, and reuses a product-name-indexed image library. Known barcodes are checked before broader image searches.
 - The importer has offline smoke tests in `tests/test_weekly_deals.py`.
 
 **Important:** These changes establish the automated process, but successful live extraction from the publisher's site has not yet been independently verified. The source can change markup or block automated requests. If a week is missed, the app explicitly displays the dates of its last valid catalog rather than presenting old offers as current.
@@ -30,6 +30,6 @@ BOGO prices and coupon eligibility vary by location; the displayed amounts are p
 
 ## Future
 - Increase the reliability and completeness of fresh weekly imports using real deployment logs.
-- Improve automatic matching of actual products and packaging.
+- Verify photo coverage and match quality on a newly published weekly catalog.
 - Add quantities, totals and in-store check-off to shopping lists.
 - Improve coupon verification and optional alerts.
