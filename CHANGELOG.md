@@ -2,6 +2,14 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.9.9 — November 17, 2026
+- Added mobile-friendly sorting: preferred category order (default), BOGO price low/high, and name A–Z.
+- Added a collapsed Filters panel with coupons-only, hide alcohol, and maximum BOGO price.
+- Filters exclude products with missing prices when applying a price cap; price ranges must fit entirely within the selected cap.
+- Save browse preferences locally and restore them on subsequent opens.
+- Group Lists and Favorites by the preferred grocery category order.
+- Kept legacy manual text import accessible under advanced Filters without displaying it on the main screen.
+
 ## v0.9.8 — November 17, 2026
 - Prioritize static, locally cached images before external requests.
 - Update shopping-list and Favorite buttons without rebuilding the deal grid, so loaded images stay visible.
