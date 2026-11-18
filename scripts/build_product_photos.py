@@ -16,7 +16,7 @@ import html
 import json
 import re
 
-CATALOG = Path("data/deals.json")
+CATALOGS = [Path("data/deals.json"), Path("data/next-deals.json")]
 OUTPUT = Path("images/products")
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; bogo-product-photo/1.0; personal grocery guide)",
@@ -136,8 +136,13 @@ def build(d):
             if save_photo(url, target): return "saved"
     return "missing"
 def main():
-    if not CATALOG.exists(): return
-    deals = json.loads(CATALOG.read_text(encoding="utf-8")).get("deals", [])
+    deals_by_id = {}
+    for path in CATALOGS:
+        if path.exists():
+            for deal in json.loads(path.read_text(encoding="utf-8")).get("deals", []):
+                deals_by_id[str(deal.get("id", ""))] = deal
+    deals = list(deals_by_id.values())
+    if not deals: return
     OUTPUT.mkdir(parents=True, exist_ok=True)
     counts = {"saved":0, "existing":0, "missing":0, "skipped":0}
     with ThreadPoolExecutor(max_workers=6) as pool:
