@@ -2,6 +2,11 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.12.4 — November 18, 2026
+- Collect coupon and rebate leads for unchecked, currently advertised shopping-list products in one optional expandable section.
+- Keep offer names linked to providers and quantity warnings visible; coupon savings remain excluded from totals.
+- Add six quick regression checks for comparison of returning grocery offers and different products from the same brand.
+
 ## v0.12.3 — November 18, 2026
 - Remember the selected weekly ad across PWA launches until its dates expire or it is no longer available.
 - Cache new-vs-returning comparison results for faster browsing on iPhone, and summarize newly advertised items in the weekly date banner.
