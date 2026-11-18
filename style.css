@@ -69,7 +69,8 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .image-search-link{display:inline-flex;align-items:center;justify-content:center;margin:0 0 8px;padding:7px 11px;border:1px solid rgba(240,193,105,.35);border-radius:9px;color:#f4d08b;text-decoration:none;font-size:12px;font-weight:700;line-height:1.2}
 .image-search-link:focus-visible{outline:2px solid #f4d08b;outline-offset:2px}
 
-/* v0.9.3: blend white-backed product thumbnails into a warm card surface. */
-.picture{background:radial-gradient(ellipse at 50% 42%,#c8b99f 0%,#b3a185 64%,#917d61 100%)}
-.picture img{background:transparent!important;border-radius:0!important;mix-blend-mode:multiply;filter:contrast(1.035) saturate(1.035)}
+/* v0.9.4: blend images against a LIGHT cream surface, never a dark placeholder. */
+.picture{background:#b5a184}
+.photo-placeholder.has-photo{background:#f0e6d7;gap:0;padding:9px}
+.photo-placeholder.has-photo img{background:transparent!important;border-radius:4px!important;mix-blend-mode:multiply;filter:none}
 .each{font-size:12px;font-weight:700;letter-spacing:.01em;line-height:1.35;color:var(--accent-soft)}
