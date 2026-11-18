@@ -230,9 +230,10 @@ def build(d):
     if not q: return "missing"
     # Known barcode, structured product metadata, then public image-search
     # thumbnails ONLY when the result's title names the brand and product.
-    for url in (barcode_images(d) + food_facts_images(q) +
-                google_labeled_images(q) + bing_labeled_images(q)):
-        if save_photo(url, target): return "saved"
+    for finder in (barcode_images, food_facts_images, google_labeled_images, bing_labeled_images):
+        candidates = finder(d) if finder is barcode_images else finder(q)
+        for url in candidates:
+            if save_photo(url, target): return "saved"
     return "missing"
 def main():
     deals_by_id = {}
