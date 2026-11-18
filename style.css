@@ -46,3 +46,9 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .image-credit{font-size:10px;color:var(--muted);text-align:right}
 
 .image-variant{font-size:10px;line-height:1.35;color:var(--muted)}
+
+/* Keep external product images strictly within their card media area */
+.deal{min-width:0;isolation:isolate}
+.picture{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 150px;height:150px;min-height:150px;max-height:150px;overflow:hidden;contain:layout paint;line-height:1.35}
+.picture img{display:block;position:static!important;flex:none;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center;background:transparent}
+.info{position:relative;z-index:1;min-width:0;background:var(--surface)}
