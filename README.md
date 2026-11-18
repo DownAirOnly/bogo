@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.10.1.**
+**Current app version: v0.11.0.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -15,6 +15,12 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - One-page shopping checklist with quantities, checked-off items, category groups and locally saved item snapshots that remain visible after a weekly ad changes.
 - BOGO estimates calculate paid items as ceil(quantity / 2) and free items as floor(quantity / 2). Tax and coupons are not included; weight-priced, missing-price and unavailable/expired-ad items are visibly excluded from totals.
 - Shopping-list completion progress and an optional Hide checked control, saved across sessions.
+- Deal images open an in-app product details sheet to edit quantities, favorites and which same-week list receives the deal; a small More button opens the same sheet.
+- Small black corner actions on each product photo: top-right heart turns red for favorites; bottom-right add-to-list becomes blue when selected. Both toggle directly without reloading the grid.
+- Weekly shopping lists are created automatically for each sale-date range; separate named lists can be created, renamed, selected and deleted for a given week.
+- Older shopping-list quantities and purchased states migrate safely to weekly list storage the first time v0.11.0 opens; original legacy storage remains untouched.
+- The search bar now fills the header; Lists live in the bottom navigation, without a duplicate top-right button.
+- Coupon overview labels show the named discount/rebate, not a count. The offer title opens the relevant provider website, while a separate chevron reveals conditions and other offers. Provider links are not verified deep links to a specific clipped coupon.
 - Existing ad coupon/rebate notes are condensed into expandable product details on deal cards and list rows. The source and conditions remain visible, with direct links to Publix digital coupons and Ibotta. Offers are not automatically clipped or deducted from estimates; availability and eligibility must be verified with each provider.
 
 ## Weekly automation
@@ -36,6 +42,6 @@ BOGO prices and coupon eligibility vary by location; the displayed amounts are p
 ## Future
 - Increase the reliability and completeness of fresh weekly imports using real deployment logs.
 - Verify photo coverage and match quality on a newly published weekly catalog.
-- Add actual receipt/tax-adjusted totals and optional multiple named lists.
+- Add receipt/tax-adjusted totals and eventual cross-device sync for named lists.
 - Add new-deal highlights and eventually more targeted grocery subcategories when the data supports them.
 - Verify coupon eligibility, stacking and redemption with supported retailer integrations before estimating coupon-adjusted totals; add optional alerts.
