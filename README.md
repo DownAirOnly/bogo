@@ -2,11 +2,12 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.9.8.**
+**Current app version: v0.9.9.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
 - User-preferred category order and compact BOGO/per-item prices.
+- Optional sorting by category order, BOGO price or product name; collapsed filters for coupons, alcohol and a maximum BOGO price. Browse preferences are saved on this device.
 - Automatic checks for newly deployed app versions on launch, return, and every 60 seconds while open.
 - Visible sale-date status: current, upcoming or expired.
 - Week selector when a separately validated upcoming catalog exists.
@@ -32,4 +33,5 @@ BOGO prices and coupon eligibility vary by location; the displayed amounts are p
 - Increase the reliability and completeness of fresh weekly imports using real deployment logs.
 - Verify photo coverage and match quality on a newly published weekly catalog.
 - Add quantities, totals and in-store check-off to shopping lists.
+- Add new-deal highlights and eventually more targeted grocery subcategories when the data supports them.
 - Improve coupon verification and optional alerts.
