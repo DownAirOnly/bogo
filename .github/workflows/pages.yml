@@ -27,6 +27,7 @@ jobs:
       - name: Validate app syntax and catalog integrity
         run: |
           node --check app.js
+          node tests/test_deal_matching.cjs
           python scripts/validate_catalogs.py
           python -m unittest discover -s tests -p 'test_weekly_deals.py'
       - name: Generate iPhone Home Screen icon
