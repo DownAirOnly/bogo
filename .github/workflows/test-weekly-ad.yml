@@ -1,0 +1,32 @@
+name: Read-only current Publix BOGO ad test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/check_weekly_ad.py'
+      - '.github/workflows/test-weekly-ad.yml'
+  workflow_dispatch:
+    inputs:
+      ad_url:
+        description: 'Public iHeartPublix weekly ad URL (optional)'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check BOGO parser
+        run: python -m unittest discover -s tests -p 'test_weekly_deals.py'
+      - name: Check current weekly ad without publishing or touching catalog
+        env:
+          AD_URL: ${{ inputs.ad_url }}
+        run: |
+          if [ -n "$AD_URL" ]; then
+            python scripts/check_weekly_ad.py --url "$AD_URL"
+          else
+            python scripts/check_weekly_ad.py
+          fi
