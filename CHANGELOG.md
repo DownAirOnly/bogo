@@ -2,6 +2,14 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.11.2 — November 18, 2026
+- Successfully imported the actual November 12–18 Publix ad into a separate current-week catalog (172 BOGO offers, 168 with prices).
+- Preserved the 150-item November 19–25 preview catalog without overwriting it.
+- Added current-week catalog discovery to app startup and automatic This Week / Next Week tabs, selected from local sale dates.
+- Kept per-week shopping lists separated, including after the active week changes.
+- Extended automatic photo generation and cache restoration to cover the new current-week catalog.
+- Verified GitHub Actions import and publish run 44243819823.
+
 ## v0.11.1 — November 17, 2026
 - Added a separate read-only live test for the current November 12–18 Publix ad. It does not publish or modify catalog data.
 - Successful GitHub Actions run 44239657634 extracted 172 BOGO candidates, with prices on 168, across 7 categories.
