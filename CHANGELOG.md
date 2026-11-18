@@ -2,6 +2,13 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.10.1 — November 17, 2026
+- Turn long coupon strings into expandable options on deal cards and in shopping-list rows.
+- Label source types such as Publix digital, printable coupon and Ibotta rebate, preserving purchase requirements and restrictions from the ad.
+- Link to the official Publix digital coupon and Ibotta sites when relevant.
+- Keep potential coupon savings separate from the estimated checkout total; do not pretend a coupon is clipped or eligible.
+- Add a shopping-list progress bar and a persistent Hide checked toggle.
+
 ## v0.10.0 — November 17, 2026
 - Added compact, single-column shopping list organized by the user's preferred grocery category order.
 - Default to two units per BOGO selection, with per-item increase/decrease controls (1–99).
