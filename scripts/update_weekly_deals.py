@@ -8,6 +8,7 @@ the sale week it is promoted to deals.json. No manual action is required.
 import argparse
 import datetime as dt
 import json
+import hashlib
 import re
 import urllib.error
 import urllib.request
@@ -270,7 +271,7 @@ def parse_offers(blocks, start, known=None):
         seen.add(key)
         label = (f"{low:.2f}" + (f"–{high:.2f}" if high != low else "") + unit) if match else ""
         offers.append({
-            "id": "publix-" + key[:100],
+            "id": "publix-" + key[:60] + "-" + hashlib.sha1(key.encode()).hexdigest()[:10],
             "category": category_for(name, category, known),
             "name": name,
             "details": "",
