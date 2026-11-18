@@ -14,9 +14,10 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 ROOT = "https://www.iheartpublix.com/"
+ARTICLE_CACHE = {}
 MAIN = Path("data/deals.json")
 NEXT = Path("data/next-deals.json")
 ARTICLE = re.compile(r"/20\d\d/\d\d/publix-ad-coupons-week-of-\d{1,2}-\d{1,2}-to-\d{1,2}-\d{1,2}", re.I)
@@ -71,7 +72,8 @@ class HTMLLines(HTMLParser):
             self.parts.append(value)
 
 def get(url, timeout=25):
-    if not url.startswith(ROOT):
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.hostname != "www.iheartpublix.com":
         raise ValueError("Only public iHeartPublix URLs are allowed")
     req = urllib.request.Request(url, headers={
         "User-Agent": "Mozilla/5.0 (compatible; bogo-weekly/2.0; personal ad viewer)",
@@ -111,7 +113,13 @@ def discover():
             if path == "feed/":
                 try:
                     root = ET.fromstring(raw)
-                    links += [e.text for e in root.findall(".//item/link") if e.text]
+                    for item in root.findall(".//item"):
+                        link = item.findtext("link", "").strip()
+                        if link:
+                            links.append(link)
+                            html = item.findtext("{http://purl.org/rss/1.0/modules/content/}encoded", "")
+                            if html:
+                                ARTICLE_CACHE[link.split("?")[0]] = html
                 except ET.ParseError:
                     pass
             page = HTMLLines()
@@ -121,8 +129,16 @@ def discover():
             print("Discovery source unavailable:", path or "homepage", str(exc)[:100])
     # WP REST is optional; not every WordPress site exposes it.
     try:
-        raw = get(urljoin(ROOT, "wp-json/wp/v2/posts?per_page=30&_fields=link"), timeout=12)
-        links += [p.get("link", "") for p in json.loads(raw) if isinstance(p, dict)]
+        raw = get(urljoin(ROOT, "wp-json/wp/v2/posts?per_page=30&_fields=link,content"), timeout=12)
+        for post in json.loads(raw):
+            if not isinstance(post, dict):
+                continue
+            url = post.get("link", "")
+            if url:
+                links.append(url)
+                body = post.get("content", {})
+                if isinstance(body, dict) and isinstance(body.get("rendered"), str):
+                    ARTICLE_CACHE[url.split("?")[0]] = body["rendered"]
     except (OSError, ValueError, urllib.error.URLError):
         pass
     valid = []
@@ -211,8 +227,16 @@ def parse_offers(blocks, start, known=None):
     offers, seen = [], set()
     known = known or {}
     category = "Pantry, Snacks & Drinks"
+    in_bogos = False
     for kind, raw in blocks:
         line = re.sub(r"\s+", " ", raw).strip()
+        if line.upper() in ("BOGOS", "BOGO DEALS", "BUY ONE GET ONE FREE"):
+            in_bogos = True
+            continue
+        if in_bogos and kind in ("h1", "h2", "h3") and line.upper() in ("MEAT", "SEAFOOD", "GROCERY", "PRODUCE", "DAIRY"):
+            break
+        if not in_bogos:
+            continue
         if kind in ("h1", "h2", "h3", "h4") or (len(line) < 45 and not BOGO.search(line)):
             category = category_heading(line, category)
         if not (12 <= len(line) <= 450 and BOGO.search(line)):
@@ -318,7 +342,14 @@ def main():
             if start > today and upcoming and start.isoformat() <= upcoming["saleStart"]:
                 continue
             article = HTMLLines()
-            article.feed(get(url))
+            try:
+                body = get(url)
+            except (OSError, ValueError, urllib.error.URLError):
+                body = ARTICLE_CACHE.get(url, "")
+                if not body:
+                    raise
+                print("Using public feed/API article content for", url)
+            article.feed(body)
             article.flush()
             offers = parse_offers(article.blocks, start, previous_categories(main, upcoming))
             validate(offers, args.min_offers)
