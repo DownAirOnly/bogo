@@ -1,36 +1,8 @@
-name: Cache verified product photos
+name: Retired legacy photo pipeline
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - scripts/cache_images.py
-      - scripts/apply_image_database.py
-      - data/product-images.json
-      - data/deals.json
-      - .github/workflows/cache-photos.yml
-permissions:
-  contents: write
-concurrency:
-  group: cache-bogo-photos
-  cancel-in-progress: false
 jobs:
-  cache:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install image validation
-        run: python -m pip install --quiet Pillow
-      - name: Apply approved database entries
-        run: python scripts/apply_image_database.py
-      - name: Validate and cache image files
-        run: python scripts/cache_images.py
-      - name: Commit cached assets
-        run: |
-          git add data/deals.json images/products
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "Cache validated product photos for bogo"
-            git pull --rebase --autostash origin main
-            git push origin HEAD:main
-          fi
+      - run: echo "Legacy photo pipeline retired; use google-images.yml."
