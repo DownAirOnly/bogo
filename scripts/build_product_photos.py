@@ -84,7 +84,7 @@ def allowed_image(url):
     p = urlparse(url)
     if p.scheme != "https": return False
     host = (p.hostname or "").lower()
-    return (host == "images.openfoodfacts.org" or
+    return (host == "images.openfoodfacts.org" or host == "th.bing.com" or
             bool(re.fullmatch(r"encrypted-tbn\d*\.gstatic\.com", host)) or
             bool(re.fullmatch(r"(?:tse|ts)\d*\.mm\.bing\.net", host)))
 
