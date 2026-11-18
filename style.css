@@ -148,3 +148,22 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .shopping-row.is-checked .list-product-name{text-decoration:line-through}
 .shopping-footnote{font-size:11px;line-height:1.45;color:var(--muted);margin:15px 0}
 @media(max-width:375px){.shopping-row{grid-template-columns:22px 62px minmax(0,1fr);gap:8px}.list-thumb{width:62px;height:74px}.shopping-row{padding:8px}.list-product-name{font-size:13px}}
+
+/* v0.10.1: compact, transparent coupon leads and in-store list controls. */
+.coupon-details{min-width:0;margin:3px 0 1px;border:1px solid #725d31;border-radius:9px;background:#3c321f;color:var(--accent-soft);font-size:11px;line-height:1.4}
+.coupon-details summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px;font-weight:700}
+.coupon-details summary::-webkit-details-marker{display:none}
+.coupon-details summary::after{content:"+";font-size:17px;font-weight:400;line-height:1}
+.coupon-details[open] summary::after{content:"−"}
+.coupon-detail-body{padding:0 9px 9px;color:var(--text)}
+.coupon-offer{display:flex;flex-direction:column;gap:4px;padding:9px 0;border-top:1px solid rgba(255,227,163,.17);overflow-wrap:anywhere}
+.coupon-provider{font-size:10px;font-weight:800;color:var(--accent-soft)}
+.coupon-note{color:var(--text);font-size:11px;line-height:1.45}
+.coupon-offer a{color:var(--accent-soft);font-size:11px;font-weight:700;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.coupon-detail-body p{margin:7px 0 0;font-size:10px;line-height:1.5;color:var(--muted)}
+.shopping-row .coupon-details{margin:4px 0 1px}
+.shopping-progress-track{height:5px;margin:-2px 0 13px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.shopping-progress-track span{display:block;height:100%;background:var(--accent);border-radius:inherit;transition:width .2s ease}
+.list-tool-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.list-tool-actions button{padding:8px 9px;white-space:nowrap}
+@media(max-width:360px){.list-tool-actions{gap:4px}.list-tool-actions button{font-size:11px;padding:7px}}
