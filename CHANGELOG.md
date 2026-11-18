@@ -2,6 +2,13 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.11.4 — November 18, 2026
+- Diagnosed why previous strict image filtering reduced photo coverage to 26/322.
+- Added DuckDuckGo's titled grocery image results as a fallback, with brand and product-word checks, retailer source ranking, and explicit exclusions for stock photos, games and recipes.
+- First successful expanded image build: 303/322 available photos (298 newly saved, 5 restored, 19 missing); four photo matching tests passed.
+- Corrected the image cache to use a unique key per deployment, preserving new matches instead of reusing an immutable stale catalog-hash cache.
+- Replaced dominant repeated category placeholders with quieter missing-image states. Cached bad images remain excluded.
+
 ## v0.11.2 — November 18, 2026
 - Successfully imported the actual November 12–18 Publix ad into a separate current-week catalog (172 BOGO offers, 168 with prices).
 - Preserved the 150-item November 19–25 preview catalog without overwriting it.
