@@ -89,23 +89,43 @@ function couponTypeLabel(type){
   return type==="publix"?"Publix digital":type==="ibotta"?"Ibotta rebate":
     type==="printable"?"Printable coupon":"Offer";
 }
-function couponSourceLink(type){
-  if(type==="publix")return '<a href="https://www.publix.com/savings/digital-coupons" target="_blank" rel="noopener noreferrer">View Publix coupons</a>';
-  if(type==="ibotta")return '<a href="https://home.ibotta.com/" target="_blank" rel="noopener noreferrer">Check Ibotta offers</a>';
+function couponSourceUrl(type){
+  if(type==="publix")return "https://www.publix.com/savings/digital-coupons";
+  if(type==="ibotta")return "https://home.ibotta.com/";
+  if(type==="printable")return "https://www.coupons.com/printable";
   return "";
+}
+function couponTitle(note){
+  return note.split(/\s+[—–]\s+/)[0].trim().replace(/^(?:Ibotta:)\s*/i,"") || "Offer details";
+}
+function couponLinkHTML(offer,label){
+  const href=couponSourceUrl(offer.type);
+  return href?'<a class="coupon-offer-link" href="'+href+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':
+    '<span class="coupon-offer-link">'+esc(label)+'</span>';
 }
 function couponDetailsHTML(d){
   const offers=couponOffers(d);
-  if(!offers.length)return"";
-  return '<details class="coupon-details"><summary>'+offers.length+' coupon'+
-    (offers.length===1?" / rebate note": " / rebate notes")+'</summary>'+
-    '<div class="coupon-detail-body">'+offers.map(o=>
-      '<div class="coupon-offer"><span class="coupon-provider">'+couponTypeLabel(o.type)+'</span>'+
-      '<span class="coupon-note">'+esc(o.note)+'</span>'+couponSourceLink(o.type)+'</div>'
-    ).join("")+
-    '<p>From the ad listing. Check current availability, product size, purchase requirements and stacking rules. Not included in estimated totals.</p></div></details>';
+  if(!offers.length)return "";
+  const first=offers[0];
+  const title=couponTitle(first.note);
+  const extra=offers.length>1?' <span class="coupon-extra">More offers</span>':"";
+  return '<div class="coupon-details"><div class="coupon-title-row">'+couponLinkHTML(first,title)+extra+
+    '<button class="coupon-expand" type="button" data-coupon-expand aria-expanded="false" aria-label="Show coupon requirements">⌄</button></div>'+
+    '<div class="coupon-detail-body" hidden>'+offers.map(offer=>
+      '<div class="coupon-offer"><span class="coupon-provider">'+couponTypeLabel(offer.type)+'</span>'+
+      couponLinkHTML(offer,couponTitle(offer.note))+
+      '<span class="coupon-note">'+esc(offer.note)+'</span></div>').join("")+
+    '<p>Check current availability, package requirements and stacking restrictions. Coupon savings are not included in estimates.</p></div></div>';
 }
-
+function wireCouponDetails(root=document){
+  root.querySelectorAll("[data-coupon-expand]").forEach(button=>button.onclick=()=>{
+    const detail=button.closest(".coupon-details")?.querySelector(".coupon-detail-body");
+    if(!detail)return;
+    detail.hidden=!detail.hidden;
+    button.setAttribute("aria-expanded",String(!detail.hidden));
+    button.textContent=detail.hidden?"⌄":"⌃";
+  });
+}
 
 // Keep product choices across weekly IDs, without requiring an account.
 const listNameStorage="bogo-shopping-names-v1",favoriteNameStorage="bogo-favorite-names-v1";
