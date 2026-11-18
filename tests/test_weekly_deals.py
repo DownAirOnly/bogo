@@ -1,6 +1,8 @@
 """Fast, offline smoke tests for the weekly Publix article extractor."""
 import unittest
-from scripts.update_weekly_deals import HTMLLines, parse_offers, sale_dates, validate
+import tempfile
+from pathlib import Path
+from scripts.update_weekly_deals import HTMLLines, parse_offers, sale_dates, validate, stage, read_catalog
 
 SAMPLE = """
 <html><body>
@@ -30,6 +32,16 @@ class WeeklyDealsTest(unittest.TestCase):
         self.assertNotIn("Ordinary meat ad", [x["name"] for x in offers])
         self.assertEqual(len({x["id"] for x in offers}), len(offers))
         validate(offers, 4)
+
+    def test_previous_week_snapshot_never_regresses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "previous-deals.json"
+            latest = {"saleStart": "2026-11-19", "saleEnd": "2026-11-25", "deals": [{"id": "later"}]}
+            old = {"saleStart": "2026-11-12", "saleEnd": "2026-11-18", "deals": [{"id": "older"}]}
+            self.assertTrue(stage(path, old))
+            self.assertTrue(stage(path, latest))
+            self.assertFalse(stage(path, old))
+            self.assertEqual(latest, read_catalog(path))
 
     def test_date_window(self):
         start, end = sale_dates(
