@@ -258,3 +258,7 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .list-tool-actions{gap:5px}
 .list-tool-actions button{min-height:34px}
 @media(max-width:365px){.list-tools{align-items:start}.list-tool-actions button{padding:7px 8px;font-size:11px}.shopping-remaining strong{font-size:14px}}
+
+/* v0.12.1: explicit recovery when the sale data is unavailable. */
+.sale-banner #retry-catalog,.empty #deal-reset{border:1px solid var(--border);background:var(--surface2);color:var(--accent-soft);border-radius:9px;font-size:12px;font-weight:800;padding:8px 12px;margin-left:8px}
+.empty #deal-reset{display:block;margin:12px auto 0}
