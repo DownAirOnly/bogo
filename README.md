@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.11.4.**
+**Current app version: v0.11.5.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -18,6 +18,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - Deal images open an in-app product details sheet to edit quantities, favorites and which same-week list receives the deal; a small More button opens the same sheet.
 - Small black corner actions on each product photo: top-right heart turns red for favorites; bottom-right add-to-list becomes blue when selected. Both toggle directly without reloading the grid.
 - Weekly shopping lists are created automatically for each sale-date range; separate named lists can be created, renamed, selected and deleted for a given week.
+- On a newer week's list, **Bring over unchecked items** carries unpurchased products from the most recent earlier list. It preserves quantities and skips duplicates, without modifying the old list. Items not found in the new advertisement are excluded from BOGO cost and savings estimates.
 - Older shopping-list quantities and purchased states migrate safely to weekly list storage the first time v0.11.0 opens; original legacy storage remains untouched.
 - The search bar now fills the header; Lists live in the bottom navigation, without a duplicate top-right button.
 - Coupon overview labels show the named discount/rebate, not a count. The offer title opens the relevant provider website, while a separate chevron reveals conditions and other offers. Provider links are not verified deep links to a specific clipped coupon.
@@ -61,3 +62,7 @@ BOGO prices and coupon eligibility vary by location; the displayed amounts are p
 - The automatic builder now matches product words, rejects obvious games/recipes/stock artwork, and prioritizes retail source pages when selecting a thumbnail. The original unchecked photo cache remains excluded.
 - The first successful expanded image build found 303 of 322 images (298 added, 5 reused; 19 missing); subsequent deployments use unique cache keys so improvements persist across builds.
 - Remaining placeholders are deliberately understated. Search titles are evidence of likely relevance, not visual verification of every photo.
+
+## Photo-quality spot check (November 18, 2026)
+- Reviewed 100 product pictures from the last successful 309-photo deployment against the listed product names. Most showed the intended grocery brand or item; a few used variety packs, promotional collages or a different permissible variant, rather than a clean single-product photo.
+- The 309/322 image-count measure is **coverage**, not a claim that every product image is an exact size or flavor match. The image cache remains preserved while other features are developed.
