@@ -1,0 +1,31 @@
+name: Build product photo candidate database
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 14 * * 2,5'
+  push:
+    paths:
+      - scripts/build_image_database.py
+      - .github/workflows/image-database.yml
+permissions:
+  contents: write
+concurrency:
+  group: bogo-image-database
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search for review candidates
+        run: python scripts/build_image_database.py
+      - name: Save candidate database
+        run: |
+          git add data/image-candidates.json
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update product image candidates for review"
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
+          fi
