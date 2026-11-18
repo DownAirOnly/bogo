@@ -102,6 +102,21 @@ def bing_images(q):
         parser = BingPics(); parser.feed(body)
         return list(dict.fromkeys(parser.items))[:6]
     except Exception: return []
+def barcode_images(d):
+    """A known product barcode is more precise than a broad image search."""
+    code = str(d.get("imageProductCode") or "").strip()
+    if not re.fullmatch(r"\d{8,14}", code):
+        return []
+    try:
+        url = "https://world.openfoodfacts.org/api/v2/product/" + code + ".json?" + urlencode({
+            "fields": "image_front_url,image_url"
+        })
+        product = json.loads(get(url, timeout=6)).get("product", {})
+        image = product.get("image_front_url") or product.get("image_url")
+        return [image] if allowed_image(image) else []
+    except Exception:
+        return []
+
 def food_facts_images(q):
     params = urlencode({
         "search_terms": q, "page_size": 20,
@@ -125,7 +140,8 @@ def save_photo(url, dest):
     try:
         raw = get(url, timeout=8)
         with Image.open(BytesIO(raw)) as source:
-            if min(source.size) < 72: return False
+            if min(source.size) < 72 or max(source.size) / min(source.size) > 3.5:
+                return False  # Tiny badges and extreme banners are not useful product photos.
             photo = ImageOps.exif_transpose(source).convert("RGBA")
             photo.thumbnail((420, 420), Image.Resampling.LANCZOS)
             background = Image.new("RGB", photo.size, "white")
@@ -157,6 +173,8 @@ def build(d):
     if not q: return "missing"
     # First use the top Google image result, as requested; search public
     # packaged-food data and Bing thumbnails when Google cannot serve it.
+    for url in barcode_images(d):
+        if save_photo(url, target): return "saved"
     for finder in (google_images, food_facts_images, bing_images):
         for url in finder(q):
             if save_photo(url, target): return "saved"
