@@ -2,6 +2,27 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.9.7 — November 17, 2026
+- Rebuilt the broken BOGO parser and added article discovery through multiple public sources.
+- Added protected current/next-week publication, auto-promotion and small offline parser checks.
+- Added explicit current/upcoming/expired date labels and a two-week selector.
+- Saved item names now survive week-specific product-ID changes.
+- Photo generation includes upcoming catalog products.
+- The next live weekly extraction still requires verification.
+
+## v0.9.6 — November 17, 2026
+- Removed artificial vertical spacing in deal cards and hid empty size labels.
+
+## v0.9.5 — November 17, 2026
+- Added automatic installed-PWA version checks and a network-first service worker.
+
+## v0.9.4 — November 17, 2026
+- Corrected overly dark product images and adopted the user's category priority.
+
+## v0.9.3 — November 17, 2026
+- Grouped deals by category and replaced long effective-price descriptions with compact per-item amounts.
+- Guarded price formatting against NaN.
+
 ## v0.8.0 — November 17, 2026
 - Added scheduled Wednesday/Thursday weekly-ad discovery.
 - Added manual iHeartPublix ad URL workflow dispatch.
