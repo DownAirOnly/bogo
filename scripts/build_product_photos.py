@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build only barcode-identified or brand-and-item-matched packaging photos.
+"""Find labeled grocery package photos, prioritizing barcode and verified metadata.
 
-Inaccurate search thumbnails must never be presented as product images.
-Outputs to a new cache directory, avoiding all unverified historical photos.
+DuckDuckGo image results include product titles and source sites, unlike anonymous
+search-result thumbnails. Rank storefront pages and reject recipes/stock photos.
+The original unreviewed photo cache is never imported.
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
@@ -130,13 +131,100 @@ def food_facts_images(q):
     return list(dict.fromkeys(found))[:4]
 
 
+TRUSTED_STORES = (
+    "walmart.com", "kroger.com", "publix.com", "target.com",
+    "instacart.com", "amazon.com", "walgreens.com", "samsclub.com",
+    "foodlion.com", "meijer.com", "wegmans.com", "smithsfoodanddrug.com",
+    "fredmeyer.com", "lowesfoods.com", "heb.com", "albertsons.com",
+    "safeway.com", "giantfood.com", "hy-vee.com", "idahoan.com",
+    "delmonte.com", "campbells.com", "bettycrocker.com",
+    "huntstomatoes.com", "ro-tel.com"
+)
+BAD_PHOTO_TERMS = REJECT | {
+    "editorial", "stock", "wallpaper", "photo", "photography", "getty",
+    "shutterstock", "illustrated", "drawing", "howto", "reel", "tiktok",
+    "facebook", "pinterest", "youtube", "meme", "clipart", "review",
+    "before", "after", "meal", "dish", "dinner", "cooking",
+}
+def normalized_product_tokens(value):
+    t = tokens(value)
+    # Brand spellings in actual product titles sometimes use RO*TEL, Ro-Tel.
+    if len(t) >= 2 and t[:2] == ["tel", "ro"]:
+        return ["rotel"] + t[2:]
+    if len(t) >= 2 and t[:2] == ["ro", "tel"]:
+        return ["rotel"] + t[2:]
+    return t
+
+def title_match_score(query, label, source_url=""):
+    """Require product type + brand; prefer retailer product pages over stock shots."""
+    if not label or len(label) < 10:
+        return -1
+    wanted = normalized_product_tokens(query)
+    have = set(normalized_product_tokens(label))
+    if not wanted or len(wanted) < 2 or len(have) < 2:
+        return -1
+    if any(w in BAD_PHOTO_TERMS for w in have):
+        return -1
+    # Search engines sometimes return unrelated trends; this rejects them.
+    if wanted[0] not in have:
+        return -1
+    secondary = wanted[1:]
+    hits = sum(w in have for w in secondary)
+    if hits < 1:
+        return -1
+    # Products with long, multi-variant names can match an advertised variant.
+    score = 3 * hits + (2 if wanted[:2] == ["del", "monte"] and "monte" in have else 0)
+    source = urlparse(source_url).hostname or ""
+    source = source.lower()
+    if any(source == h or source.endswith("." + h) for h in TRUSTED_STORES):
+        score += 8
+    else:
+        title_lower = label.lower()
+        if any(h in title_lower for h in TRUSTED_STORES):
+            score += 5
+    if "product" in have or "can" in have or "package" in have:
+        score += 1
+    return score
+
+def duckduckgo_images(q):
+    """Image-search results have explicit product titles and source page URLs."""
+    term = q + " grocery product package front"
+    landing_url = "https://duckduckgo.com/?" + urlencode({
+        "q": term, "iax": "images", "ia": "images"
+    })
+    try:
+        landing = get(landing_url, limit=900_000, timeout=6).decode("utf-8", "ignore")
+        code = re.search(r'vqd[=:" ]+([0-9-]+)', landing) or re.search(
+            r'vqd=([0-9-]+)', landing
+        )
+        if not code:
+            return []
+        url = "https://duckduckgo.com/i.js?" + urlencode({
+            "q": term, "vqd": code.group(1), "o": "json",
+            "l": "us-en", "p": "1"
+        })
+        data = json.loads(get(url, limit=2_000_000, timeout=6))
+        ranked = []
+        for position, item in enumerate(data.get("results") or []):
+            label = item.get("title") or ""
+            thumbnail = item.get("thumbnail") or ""
+            source = item.get("url") or ""
+            score = title_match_score(q, label, source)
+            if score < 0 or not allowed_image(thumbnail):
+                continue
+            ranked.append((score, -position, thumbnail))
+        ranked.sort(reverse=True)
+        return list(dict.fromkeys(url for _,_,url in ranked))[:7]
+    except Exception:
+        return []
+
 def metadata_plausible(q, title):
     label = html.unescape(str(title or "")).strip()
     if len(label) < 10 or len(label) > 260:
         return False
     if re.search(r"^(?:image result for|search results for|google images|bing images)\b", label, re.I):
         return False
-    return plausible_product_match(q, "", label)
+    return title_match_score(q, label) >= 0
 
 def google_labeled_images(q):
     """Only thumbnails with independently supplied relevant result titles."""
@@ -230,7 +318,7 @@ def build(d):
     if not q: return "missing"
     # Known barcode, structured product metadata, then public image-search
     # thumbnails ONLY when the result's title names the brand and product.
-    for finder in (barcode_images, food_facts_images, google_labeled_images, bing_labeled_images):
+    for finder in (barcode_images, food_facts_images, duckduckgo_images, bing_labeled_images, google_labeled_images):
         candidates = finder(d) if finder is barcode_images else finder(q)
         for url in candidates:
             if save_photo(url, target): return "saved"
