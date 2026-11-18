@@ -1,0 +1,45 @@
+name: Publish verified current-week BOGOs
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/import_active_week.py'
+      - '.github/workflows/import-active-week.yml'
+  workflow_dispatch:
+    inputs:
+      ad_url:
+        description: 'Optional public iHeartPublix ad for the active week'
+        required: false
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: bogo-weekly-catalog
+  cancel-in-progress: false
+jobs:
+  publish-active-week:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify parser against offline sample
+        run: python -m unittest discover -s tests -p 'test_weekly_deals.py'
+      - name: Import November 12–18 into a separate validated catalog
+        env:
+          AD_URL: ${{ inputs.ad_url }}
+        run: |
+          if [ -n "$AD_URL" ]; then
+            python scripts/import_active_week.py --url "$AD_URL"
+          else
+            python scripts/import_active_week.py
+          fi
+      - name: Publish current week without replacing the preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f data/current-deals.json ]; then
+            python scripts/publish_weekly_catalog.py
+          else
+            echo "No validated current-week catalog to publish" >&2
+            exit 1
+          fi
