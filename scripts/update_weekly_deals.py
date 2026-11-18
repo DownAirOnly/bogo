@@ -160,8 +160,56 @@ def category_heading(line, previous):
 def normalized_name(name):
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
-def parse_offers(blocks, start):
+def category_for(name, suggested, known):
+    """Use existing matches and recognizable grocery terms before generic pantry."""
+    key = normalized_name(name)
+    if key in known:
+        return known[key]
+    words = key.split("-")
+    if len(words) >= 3:
+        prefix = "-".join(words[:3])
+        matching = {cat for old, cat in known.items() if old.startswith(prefix)}
+        if len(matching) == 1:
+            return next(iter(matching))
+    text = name.lower()
+    def has(*terms):
+        return any(re.search(r"\b" + re.escape(t) + r"\b", text) for t in terms)
+    if has("wine", "beer", "ale", "lager", "prosecco", "sauvignon", "chardonnay",
+           "cabernet", "merlot", "pinot", "vodka", "gin", "cocktail", "hard seltzer"):
+        return "Beer, Wine & Alternatives"
+    if has("laundry", "detergent", "dish soap", "tissue", "paper towel", "toilet paper",
+           "cleaner", "deodorant", "shampoo", "conditioner", "body wash", "razor",
+           "mouthwash", "toothpaste", "diaper", "fabric softener", "dog food", "cat food"):
+        return "Home, Health & Cleaning"
+    if has("frozen", "ice cream", "pizza rolls", "freezer", "french fries", "phyllo",
+           "pot pie", "skillet meals", "gelato", "sorbetto", "puff pastry",
+           "frozen dessert", "meatless meatballs", "appetizers", "tater tots",
+           "totino", "ore-ida", "birds eye", "breyers", "haagen-dazs", "talenti",
+           "cool whip", "good humor", "edwards", "marie callender"):
+        return "Frozen Foods"
+    if has("milk", "yogurt", "cheese", "butter", "cream cheese", "sour cream",
+           "creamer", "cottage cheese", "refrigerated", "eggs", "kefir"):
+        return "Dairy & Refrigerated"
+    if has("shrimp", "salmon", "tilapia", "steak", "beef", "pork", "chicken breast",
+           "bacon", "sausage", "kielbasa", "turkey breast", "ground turkey",
+           "ribeye", "meatballs", "salami", "hot dogs"):
+        return "Meat & Seafood"
+    if has("salad", "lettuce", "arugula", "baby spinach", "fresh berries", "tomatoes",
+           "grapes", "apples", "watermelon", "avocado", "hummus", "deli", "fresh fruit"):
+        return "Produce & Deli"
+    return suggested if suggested in CATEGORY_NAMES else "Pantry, Snacks & Drinks"
+
+def previous_categories(*catalogs):
+    return {
+        normalized_name(d["name"]): d["category"]
+        for catalog in catalogs if catalog
+        for d in catalog.get("deals", [])
+        if d.get("name") and d.get("category") in CATEGORY_NAMES
+    }
+
+def parse_offers(blocks, start, known=None):
     offers, seen = [], set()
+    known = known or {}
     category = "Pantry, Snacks & Drinks"
     for kind, raw in blocks:
         line = re.sub(r"\s+", " ", raw).strip()
@@ -169,7 +217,8 @@ def parse_offers(blocks, start):
             category = category_heading(line, category)
         if not (12 <= len(line) <= 450 and BOGO.search(line)):
             continue
-        if re.search(r"add to shopping list|subscribe|privacy policy|leave a comment|printable coupon|advertisement", line, re.I):
+        line = re.sub(r"\bAdd to Shopping List\b", "", line, flags=re.I).strip()
+        if re.search(r"subscribe|privacy policy|leave a comment|printable coupon|advertisement", line, re.I):
             # Coupon blocks often mention BOGO; never treat them as deal lines.
             continue
         bogo = BOGO.search(line)
@@ -179,8 +228,8 @@ def parse_offers(blocks, start):
         if re.search(r"^(?:save|off|coupon|limit|buy|view|click|see|regular price)\b", prefix, re.I):
             continue
         rest = line[bogo.end():]
-        match = PRICE.search(rest)
-        if not match and not NO_PRICE.search(rest):
+        match = PRICE.search(rest[:65]) if not NO_PRICE.search(rest[:65]) else None
+        if not match and not NO_PRICE.search(rest[:65]):
             continue
         low = float(match.group(1)) if match else None
         high = float(match.group(2) or match.group(1)) if match else None
@@ -198,7 +247,7 @@ def parse_offers(blocks, start):
         label = (f"{low:.2f}" + (f"–{high:.2f}" if high != low else "") + unit) if match else ""
         offers.append({
             "id": "publix-" + key[:100],
-            "category": category,
+            "category": category_for(name, category, known),
             "name": name,
             "details": "",
             "price": low if low == high else None,
@@ -246,7 +295,7 @@ def main():
     arg.add_argument("--min-offers", type=int, default=50)
     arg.add_argument("--today", default="", help="YYYY-MM-DD, for local tests")
     args = arg.parse_args()
-    today = dt.date.fromisoformat(args.today) if args.today else dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).date()
+    today = dt.date.fromisoformat(args.today) if args.today else dt.datetime.now(dt.timezone.utc).date()
     main = read_catalog(MAIN)
     upcoming = read_catalog(NEXT)
     if not main:
@@ -271,7 +320,7 @@ def main():
             article = HTMLLines()
             article.feed(get(url))
             article.flush()
-            offers = parse_offers(article.blocks, start)
+            offers = parse_offers(article.blocks, start, previous_categories(main, upcoming))
             validate(offers, args.min_offers)
             carry_image_fields(offers, main, upcoming)
             snapshot = {
