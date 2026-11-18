@@ -34,7 +34,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: images/verified-products
-          key: bogo-verified-photos-${{ hashFiles('data/current-deals.json', 'data/deals.json', 'data/next-deals.json') }}
+          # One immutable cache per run: newly discovered photos are retained
+          # instead of restoring a stale catalog-hash cache forever.
+          key: bogo-verified-photos-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             bogo-verified-photos-
       - name: Find and cache product photos automatically
