@@ -16,11 +16,7 @@
       "priceLabel": "3.99",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Fresh Attitude Salads — Spring Mix, Arugula, Half and Half, Hearty Harvest, or Baby Spinach",
-      "image": "images/products/publix-2026-11-1.webp",
-      "imageSource": "Instacart product listing",
-      "imageVariant": "Spring Mix, 5 oz (representative variety)",
-      "imageStatus": "cached"
+      "searchQuery": "Fresh Attitude Salads — Spring Mix, Arugula, Half and Half, Hearty Harvest, or Baby Spinach"
     },
     {
       "id": "publix-2026-11-2",
@@ -33,11 +29,7 @@
       "priceLabel": "5.99–7.29",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Boursin Gourmet Cheese",
-      "image": "images/products/publix-2026-11-2.webp",
-      "imageSource": "pOpshelf product listing",
-      "imageVariant": "Garlic & Fine Herbs, 5.2 oz (representative variety)",
-      "imageStatus": "cached"
+      "searchQuery": "Boursin Gourmet Cheese"
     },
     {
       "id": "publix-2026-11-3",
@@ -51,10 +43,7 @@
       "coupon": "",
       "notes": "",
       "searchQuery": "Brooklyn Cured Beef Salami",
-      "image": "images/products/publix-2026-11-3.webp",
-      "imageSource": "Open Food Facts",
-      "imageProductCode": "0095225849404",
-      "imageStatus": "cached"
+      "imageProductCode": "0095225849404"
     },
     {
       "id": "publix-2026-11-4",
@@ -93,11 +82,7 @@
       "priceLabel": "4.29",
       "coupon": "$0.75 off 1 Sabra 8 oz or larger tub — Publix digital coupon",
       "notes": "",
-      "searchQuery": "Sabra Hummus",
-      "image": "images/products/publix-2026-11-6.webp",
-      "imageSource": "Kroger product listing",
-      "imageVariant": "Classic, 8 oz (representative variety)",
-      "imageStatus": "cached"
+      "searchQuery": "Sabra Hummus"
     },
     {
       "id": "publix-2026-11-7",
@@ -110,10 +95,7 @@
       "priceLabel": "4.79",
       "coupon": "",
       "notes": "",
-      "searchQuery": "Snack Factory Pretzel Crisps",
-      "imageSource": "Wikimedia Commons (public domain)",
-      "imageVariant": "Pretzel Crisps (representative photo)",
-      "imageStatus": "unverified-source"
+      "searchQuery": "Snack Factory Pretzel Crisps"
     },
     {
       "id": "publix-2026-11-8",
@@ -777,10 +759,7 @@
       "coupon": "",
       "notes": "",
       "searchQuery": "Ore-Ida Potatoes",
-      "image": "images/products/publix-2026-11-58.webp",
-      "imageSource": "Open Food Facts",
-      "imageProductCode": "0013120002861",
-      "imageStatus": "cached"
+      "imageProductCode": "0013120002861"
     },
     {
       "id": "publix-2026-11-59",
@@ -1691,10 +1670,7 @@
       "coupon": "",
       "notes": "",
       "searchQuery": "Sonny’s BBQ Sauce",
-      "image": "images/products/publix-2026-11-128.webp",
-      "imageSource": "Open Food Facts",
-      "imageProductCode": "0781198191601",
-      "imageStatus": "cached"
+      "imageProductCode": "0781198191601"
     },
     {
       "id": "publix-2026-11-129",
@@ -1799,10 +1775,7 @@
       "coupon": "$0.75 back on 1 Welch’s Sparkling Juice 25.4 oz — Ibotta, limit 5",
       "notes": "",
       "searchQuery": "Welch’s Sparkling Non-Alcoholic Juice Cocktail",
-      "image": "images/products/publix-2026-11-136.webp",
-      "imageSource": "Open Food Facts",
-      "imageProductCode": "0041800706181",
-      "imageStatus": "cached"
+      "imageProductCode": "0041800706181"
     },
     {
       "id": "publix-2026-11-137",
