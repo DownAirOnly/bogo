@@ -1,0 +1,38 @@
+name: Update weekly Publix BOGO deals
+on:
+  schedule:
+    - cron: '20 12 * * 3,4'
+  workflow_dispatch:
+    inputs:
+      ad_url:
+        description: 'Optional iHeartPublix weekly ad URL'
+        required: false
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: bogo-weekly-catalog
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and validate current weekly offers
+        env:
+          AD_URL: ${{ inputs.ad_url }}
+        run: |
+          if [ -n "$AD_URL" ]; then
+            python scripts/update_weekly_deals.py --url "$AD_URL"
+          else
+            python scripts/update_weekly_deals.py
+          fi
+      - name: Publish validated catalog only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! git diff --quiet -- data/deals.json; then
+            python scripts/publish_weekly_catalog.py
+          else
+            echo "No validated catalog change. Keeping the last successful data."
+          fi
