@@ -40,7 +40,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! git diff --quiet -- data/deals.json data/next-deals.json || [ -n "$(git ls-files --others --exclude-standard data/next-deals.json)" ]; then
+          if ! git diff --quiet -- data/deals.json data/next-deals.json data/previous-deals.json || [ -n "$(git ls-files --others --exclude-standard data/next-deals.json data/previous-deals.json)" ]; then
             python scripts/publish_weekly_catalog.py
           else
             echo "No validated catalog change. Keeping existing weeks."
