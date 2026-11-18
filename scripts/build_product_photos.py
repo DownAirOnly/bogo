@@ -17,7 +17,7 @@ import html
 import json
 import re
 
-CATALOGS = [Path("data/deals.json"), Path("data/next-deals.json")]
+CATALOGS = [Path("data/current-deals.json"), Path("data/deals.json"), Path("data/next-deals.json")]
 OUTPUT = Path("images/products")
 INDEX_PATH = OUTPUT / "photo-index.json"
 PHOTO_INDEX = {}
