@@ -16,7 +16,7 @@ from pathlib import Path
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "DownAirOnly/bogo")
 TOKEN = os.environ["GH_TOKEN"]
-FILES = ["data/deals.json", "data/next-deals.json", "data/current-deals.json"]
+FILES = ["data/previous-deals.json", "data/deals.json", "data/next-deals.json", "data/current-deals.json"]
 
 def request(method, path, payload=None):
     url = f"https://api.github.com/repos/{REPO}/contents/{path}"
