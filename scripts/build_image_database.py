@@ -33,9 +33,12 @@ def main():
     db=json.loads(DATABASE.read_text()) if DATABASE.exists() else {"schemaVersion":1,"products":{}}
     candidates=json.loads(CANDIDATES.read_text()) if CANDIDATES.exists() else {"schemaVersion":1,"products":{}}
     added=0
+    attempted=0
     for d in catalog["deals"]:
         key=d["id"]
         if d.get("image") or key in db["products"] or key in candidates["products"]: continue
+        if attempted>=20: break
+        attempted+=1
         q=d.get("searchQuery") or d["name"]
         # Broad offer groups may cover several products; keep suggestions review-only.
         try:
