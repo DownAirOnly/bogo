@@ -4,6 +4,7 @@ Version numbers are retrospective development milestones reconstructed from the 
 
 ## v0.9.8 — November 17, 2026
 - Prioritize static, locally cached images before external requests.
+- Update shopping-list and Favorite buttons without rebuilding the deal grid, so loaded images stay visible.
 - Cache remote image matches by complete product name and package size instead of a shortened query.
 - Reuse successful downloaded product photos across weekly catalog releases.
 - Restore previous build photo caches, and cap image searches so a slow provider does not indefinitely block website deployment.
