@@ -26,6 +26,26 @@
       "dealName": "Shock Top Belgian White Wheat Ale Beer",
       "status": "needs-review",
       "options": []
+    },
+    "di-bruno-bros-grissini-breadsticks": {
+      "dealName": "Di Bruno Bros. Grissini Breadsticks",
+      "status": "needs-review",
+      "options": []
+    },
+    "kerrygold-cheddar-reserve-aged-or-dubliner-cheese": {
+      "dealName": "Kerrygold Cheddar (Reserve/Aged) or Dubliner Cheese",
+      "status": "needs-review",
+      "options": []
+    },
+    "snack-factory-pretzel-crisps": {
+      "dealName": "Snack Factory Pretzel Crisps",
+      "status": "needs-review",
+      "options": []
+    },
+    "stacy-s-pita-chips-bagel-or-thins": {
+      "dealName": "Stacy’s Pita Chips, Bagel or Thins",
+      "status": "needs-review",
+      "options": []
     }
   }
 }
