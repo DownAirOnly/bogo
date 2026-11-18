@@ -1,12 +1,6 @@
 name: Automatically match product photos
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '40 15 * * *'
-  push:
-    paths:
-      - scripts/discover_verified_photos.py
-      - .github/workflows/verified-photos.yml
 permissions:
   contents: write
 concurrency:
