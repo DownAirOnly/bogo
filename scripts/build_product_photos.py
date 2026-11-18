@@ -1,34 +1,57 @@
 #!/usr/bin/env python3
-"""Automatically cache small real product photos during the Pages build.
+"""Build only barcode-identified or brand-and-item-matched packaging photos.
 
-Runs without keys or user actions. Uses public search thumbnails and Open Food
-Facts; never treats a search match as a verified exact product variant.
-Unavailable sources are skipped without interrupting site deployment.
+Inaccurate search thumbnails must never be presented as product images.
+Outputs to a new cache directory, avoiding all unverified historical photos.
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
 import shutil
-from urllib.parse import quote, urlencode, urlparse
+from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 from PIL import Image, ImageOps
-import html
 import json
 import re
 
 CATALOGS = [Path("data/current-deals.json"), Path("data/deals.json"), Path("data/next-deals.json")]
-OUTPUT = Path("images/products")
+OUTPUT = Path("images/verified-products")
 INDEX_PATH = OUTPUT / "photo-index.json"
 PHOTO_INDEX = {}
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; bogo-product-photo/1.0; personal grocery guide)",
     "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*",
 }
-STOP = {"the", "and", "for", "with", "size", "pack", "products", "organic", "assorted", "variety"}
+STOP = {"the", "and", "for", "with", "size", "pack", "products",
+        "organic", "assorted", "variety", "flavor", "flavored", "select"}
+REJECT = {"recipe", "recipes", "casserole", "casseroles", "game", "gaming",
+          "showdown", "wallpaper", "screenshot", "photo", "logo", "poster",
+          "artwork", "drawing", "template", "illustration", "sticker",
+          "ribbon", "sports", "football", "baseball", "sponsored"}
+def tokens(s):
+    words = re.findall(r"[a-z0-9]+", (s or "").lower())
+    words = [w for w in words if len(w) > 2 and w not in STOP]
+    result = []
+    for word in words:
+        # Plural normalization handles "tomatoes" and "vegetables" without
+        # permissive substring matches ("Hunt" matching "hunting").
+        if word.endswith("ies") and len(word) > 5:
+            word = word[:-3] + "y"
+        elif word.endswith("oes") and len(word) > 5:
+            word = word[:-2]
+        elif word.endswith("s") and not word.endswith("ss") and len(word) > 4:
+            word = word[:-1]
+        if word not in result:
+            result.append(word)
+    return result
+
+def query_for(d):
+    s = (d.get("searchQuery") or d.get("name") or "").split(" — ")[0]
+    s = re.split(r"\s+(?:or|and/or)\s+", s, maxsplit=1, flags=re.I)[0]
+    s = re.split(r"[,;/]", s, maxsplit=1)[0]
+    return re.sub(r"\([^)]*\)", "", s).strip()
+
 def photo_key(deal):
-    # Preserve the complete product name; never merge different flavors
-    # just because the first few words match.
     return " ".join(tokens(deal.get("name") or deal.get("searchQuery") or ""))
 
 def valid_cached(path):
@@ -38,78 +61,42 @@ def valid_cached(path):
     except OSError:
         return False
 
-def tokens(s):
-    return [w for w in re.findall(r"[a-z0-9]+", (s or "").lower()) if len(w)>2 and w not in STOP]
-def query_for(d):
-    s = (d.get("searchQuery") or d.get("name") or "").split(" — ")[0]
-    s = re.split(r"\s+(?:or|and/or)\s+", s, maxsplit=1, flags=re.I)[0]
-    s = re.split(r"[,;/]", s, maxsplit=1)[0]
-    return re.sub(r"\([^)]*\)", "", s).strip()
+def plausible_product_match(query, brand, product_name):
+    wanted = tokens(query)
+    have_brand = set(tokens(brand))
+    have_name = set(tokens(product_name))
+    have = have_brand | have_name
+    # Only trust matches with a real brand and specific item nouns.
+    # A "Hunt" game screenshot, "Del" logo, or tomato recipe fails.
+    if len(wanted) < 2 or len(have) < 2:
+        return False
+    if any(word in REJECT for word in tokens(product_name)):
+        return False
+    if wanted[0] not in have:
+        return False
+    # The packaging/product listing must contain the brand and product type.
+    return all(word in have for word in wanted[:min(len(wanted), 4)])
+
 def allowed_image(url):
     if not url or not isinstance(url, str): return False
     p = urlparse(url)
-    if p.scheme != "https": return False
-    host = (p.hostname or "").lower()
-    return (host == "images.openfoodfacts.org" or
-            bool(re.fullmatch(r"encrypted-tbn\d*\.gstatic\.com", host)) or
-            bool(re.fullmatch(r"(?:tse|ts)\d*\.mm\.bing\.net", host)))
+    return p.scheme == "https" and (p.hostname or "").lower() == "images.openfoodfacts.org"
+
 def get(url, limit=4_000_000, timeout=7):
     with urlopen(Request(url, headers=HEADERS), timeout=timeout) as response:
         if response.status != 200: raise ValueError("HTTP error")
         content = response.read(limit + 1)
         if len(content) > limit: raise ValueError("Large response")
         return content
-def google_images(q):
-    url = "https://www.google.com/search?" + urlencode({
-        "tbm": "isch", "q": q + " product packaging", "num": 12, "safe": "active"
-    })
-    try: body = get(url, limit=1_500_000, timeout=6).decode("utf-8", errors="ignore")
-    except Exception: return []
-    body = html.unescape(body).replace(r"\u003d", "=").replace(r"\u0026", "&")
-    class Pics(HTMLParser):
-        def __init__(self): super().__init__(); self.items=[]
-        def handle_starttag(self, tag, attrs):
-            if tag != "img": return
-            a = dict(attrs)
-            for v in (a.get("src"), a.get("data-src")):
-                if v and "gstatic.com/images?q=tbn:" in v and allowed_image(v):
-                    self.items.append(v)
-    parsed = Pics()
-    try: parsed.feed(body)
-    except Exception: pass
-    urls = parsed.items + re.findall(
-        r"https://encrypted-tbn\d*\.gstatic\.com/images\?q=tbn:[A-Za-z0-9_-]+",
-        body
-    )
-    return list(dict.fromkeys(u for u in urls if allowed_image(u)))[:6]
-class BingPics(HTMLParser):
-    def __init__(self): super().__init__(); self.items=[]
-    def handle_starttag(self, tag, attrs):
-        if tag != "a": return
-        a = dict(attrs)
-        m = a.get("m")
-        if not m: return
-        try:
-            data = json.loads(html.unescape(m))
-            u = data.get("turl", "")
-            if allowed_image(u): self.items.append(u)
-        except (ValueError, TypeError): pass
-def bing_images(q):
-    try:
-        body = get("https://www.bing.com/images/search?" + urlencode({
-            "q": q + " product packaging", "first": 1, "adlt": "strict"
-        }), limit=1_500_000, timeout=6).decode("utf-8", errors="ignore")
-        parser = BingPics(); parser.feed(body)
-        return list(dict.fromkeys(parser.items))[:6]
-    except Exception: return []
+
 def barcode_images(d):
-    """A known product barcode is more precise than a broad image search."""
+    """Use a known exact barcode when available."""
     code = str(d.get("imageProductCode") or "").strip()
     if not re.fullmatch(r"\d{8,14}", code):
         return []
     try:
         url = "https://world.openfoodfacts.org/api/v2/product/" + code + ".json?" + urlencode({
-            "fields": "image_front_url,image_url"
+            "fields": "product_name,brands,image_front_url,image_url"
         })
         product = json.loads(get(url, timeout=6)).get("product", {})
         image = product.get("image_front_url") or product.get("image_url")
@@ -118,23 +105,24 @@ def barcode_images(d):
         return []
 
 def food_facts_images(q):
+    # We deliberately do not publish anonymous Google or Bing image
+    # thumbnails. A readable thumbnail alone proves nothing about the product.
     params = urlencode({
-        "search_terms": q, "page_size": 20,
-        "fields": "product_name,brands,image_front_url,image_url"
+        "search_terms": q, "page_size": 30,
+        "fields": "product_name,product_name_en,brands,image_front_url,image_url"
     })
     try:
         j = json.loads(get("https://world.openfoodfacts.org/api/v2/search?" + params, timeout=7))
     except Exception: return []
-    wanted = tokens(q)
     found = []
     for product in j.get("products", []):
+        label = (product.get("product_name_en") or product.get("product_name") or "")
+        brand = product.get("brands") or ""
+        if not plausible_product_match(q, brand, label): continue
         url = product.get("image_front_url") or product.get("image_url") or ""
-        if not allowed_image(url): continue
-        have = tokens((product.get("brands") or "") + " " + (product.get("product_name") or ""))
-        score = sum(w in have for w in wanted) / max(1, len(wanted))
-        if score >= .45: found.append((score,url))
-    found.sort(reverse=True)
-    return list(dict.fromkeys(url for _,url in found))[:5]
+        if allowed_image(url): found.append(url)
+    return list(dict.fromkeys(found))[:4]
+
 def save_photo(url, dest):
     if not allowed_image(url): return False
     try:
@@ -171,13 +159,10 @@ def build(d):
                 pass
     q = query_for(d)
     if not q: return "missing"
-    # First use the top Google image result, as requested; search public
-    # packaged-food data and Bing thumbnails when Google cannot serve it.
-    for url in barcode_images(d):
+    # Exact-barcode image first; then strictly metadata-matched package photos.
+    # No Google/Bing/Wikimedia thumbnails without product identity evidence.
+    for url in barcode_images(d) + food_facts_images(q):
         if save_photo(url, target): return "saved"
-    for finder in (google_images, food_facts_images, bing_images):
-        for url in finder(q):
-            if save_photo(url, target): return "saved"
     return "missing"
 def main():
     deals_by_id = {}
