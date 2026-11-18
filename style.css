@@ -108,3 +108,43 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 /* Keep optional manual import accessible without taking space on the main Deals screen. */
 .filter-import{justify-self:start;grid-column:1;border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;padding:5px 0}
 .browse-filters .filter-reset{grid-column:2;justify-self:end}
+
+/* v0.10.0 — One-screen shopping checklist; compact on iPhone. */
+.tabs[hidden],.week-switch[hidden]{display:none}
+.shopping-summary{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;margin-bottom:13px}
+.shopping-progress{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:13px}
+.shopping-progress strong{font:700 17px/1.2 'Outfit',sans-serif;color:var(--text)}
+.shopping-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.shopping-totals>div{min-width:0;padding:10px;background:var(--surface2);border-radius:11px;display:flex;flex-direction:column;gap:5px}
+.shopping-totals span{font-size:11px;color:var(--muted)}
+.shopping-totals strong{font:700 clamp(15px,4.2vw,22px)/1.18 'Outfit',sans-serif;color:var(--accent-soft);overflow-wrap:anywhere}
+.shopping-disclaimer{margin:10px 0 0;font-size:11px;line-height:1.45;color:var(--muted)}
+.list-tools{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px;gap:10px;color:var(--muted);font-size:12px}
+.list-tools button{border:1px solid var(--border);border-radius:9px;color:var(--text);background:var(--surface2);padding:8px 12px;font-weight:700;font-size:12px}
+.list-category{margin-bottom:19px}
+.list-category>h3{font:700 15px/1.25 'Outfit',sans-serif;color:var(--text);margin:0 0 9px;display:flex;align-items:baseline;gap:8px}
+.list-category>h3 span{font:600 11px 'DM Sans',sans-serif;color:var(--muted)}
+.shopping-row{display:grid;grid-template-columns:24px 74px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;margin-bottom:8px;min-width:0}
+.shopping-check{appearance:auto;width:22px!important;height:22px!important;min-width:22px!important;margin:7px 0 0!important;padding:0!important;border:1px solid var(--border);accent-color:var(--accent);cursor:pointer}
+.list-thumb{width:74px;height:80px;border-radius:9px;overflow:hidden;background:#eee2d2}
+.list-thumb .photo-placeholder{padding:5px;font-size:10px}
+.list-thumb .photo-placeholder.has-photo{padding:4px}
+.list-thumb .photo-placeholder .placeholder-category{font-size:10px}
+.list-thumb .photo-placeholder .placeholder-label{font-size:8px}
+.list-thumb img{width:100%;height:100%;max-width:100%;object-fit:contain}
+.list-row-main{min-width:0;display:flex;flex-direction:column;gap:5px}
+.list-product-name{font:700 14px/1.25 'Outfit',sans-serif;overflow-wrap:anywhere}
+.list-product-size{font-size:11px;line-height:1.3;color:var(--muted)}
+.list-product-price{font-size:12px;font-weight:700;color:var(--accent-soft)}
+.list-product-price span{font-weight:500;color:var(--muted)}
+.list-row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:5px}
+.quantity-control{display:inline-flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0}
+.quantity-control button{background:var(--surface2);color:var(--text);border:0;width:33px;height:33px;font-size:18px;line-height:1;font-weight:600;padding:0}
+.quantity-control button:disabled{opacity:.35;cursor:default}
+.quantity-control span{min-width:31px;text-align:center;font-size:13px;font-weight:800}
+.list-line-total{font-size:13px;line-height:1.3;font-weight:700;color:var(--text);overflow-wrap:anywhere}
+.list-remove{align-self:flex-start;margin:3px 0 0;padding:3px 0;border:0;background:transparent;color:var(--muted);font-size:11px;text-align:left}
+.shopping-row.is-checked{opacity:.72}
+.shopping-row.is-checked .list-product-name{text-decoration:line-through}
+.shopping-footnote{font-size:11px;line-height:1.45;color:var(--muted);margin:15px 0}
+@media(max-width:375px){.shopping-row{grid-template-columns:22px 62px minmax(0,1fr);gap:8px}.list-thumb{width:62px;height:74px}.shopping-row{padding:8px}.list-product-name{font-size:13px}}
