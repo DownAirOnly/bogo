@@ -315,6 +315,134 @@ function changeWeek(id){
   selectedWeekId=id;deals=[...importedDeals,...w.catalog.deals];
   category="All";view="deals";render();
 }
+// One-page shopping checklist. Estimates assume Publix BOGO is buy two,
+// pay the shelf price of one. Odd quantities pay for the extra individual item.
+function quantityOf(record){
+  const n=Number(record.quantity);
+  return Number.isInteger(n)?Math.min(99,Math.max(1,n)):2;
+}
+function shoppingListRecords(){
+  const liveByKey=new Map(deals.map(d=>[shoppingItemKey(d),d]));
+  return Object.entries(shoppingItems).filter(([,record])=>record&&record.name).map(([key,record])=>{
+    const live=liveByKey.get(key);
+    return {key,record,deal:live||record,live:!!live};
+  }).sort((a,b)=>compareCategories(a.deal.category||"Other",b.deal.category||"Other")||
+    a.deal.name.localeCompare(b.deal.name));
+}
+function estimateShoppingItem(entry){
+  const qty=quantityOf(entry.record);
+  const selected=weekCatalogs.find(w=>w.id===selectedWeekId);
+  if(!entry.live)return {available:false,reason:"Not in selected ad"};
+  if(selected&&weekState(selected.catalog)==="expired")
+    return {available:false,reason:"Sale has ended"};
+  if(priceUnit(entry.deal)==="/lb")
+    return {available:false,reason:"Price per lb; weight needed"};
+  const range=priceRange(entry.deal);
+  if(!range)return {available:false,reason:"Price not listed"};
+  const paid=Math.ceil(qty/2),free=Math.floor(qty/2);
+  return {available:true,low:Math.round(range[0]*paid*100)/100,
+    high:Math.round(range[1]*paid*100)/100,
+    savedLow:Math.round(range[0]*free*100)/100,
+    savedHigh:Math.round(range[1]*free*100)/100};
+}
+function moneyRange(low,high){
+  return money(low)+(Math.abs(low-high)>.005?"–"+money(high):"");
+}
+function listEstimateText(entry){
+  const estimate=estimateShoppingItem(entry);
+  return estimate.available?moneyRange(estimate.low,estimate.high):estimate.reason;
+}
+function shoppingTotals(records){
+  let low=0,high=0,savedLow=0,savedHigh=0,priced=0,excluded=0,checked=0;
+  for(const entry of records){
+    if(entry.record.checked)checked++;
+    const e=estimateShoppingItem(entry);
+    if(!e.available){excluded++;continue}
+    low+=e.low;high+=e.high;savedLow+=e.savedLow;savedHigh+=e.savedHigh;priced++;
+  }
+  return {low,high,savedLow,savedHigh,priced,excluded,checked,total:records.length};
+}
+function shoppingSummaryHTML(records){
+  const t=shoppingTotals(records);
+  return '<div class="shopping-progress"><strong>Shopping list</strong><span>'+t.checked+' of '+t.total+' checked</span></div>'+
+    '<div class="shopping-totals"><div><span>Estimated spend</span><strong>'+(t.priced?moneyRange(t.low,t.high):"—")+'</strong></div>'+
+    '<div><span>BOGO savings</span><strong>'+(t.priced?moneyRange(t.savedLow,t.savedHigh):"—")+'</strong></div></div>'+
+    '<p class="shopping-disclaimer">Estimates use two-for-one pricing, without tax or coupons.'+
+    (t.excluded?' '+t.excluded+' item'+(t.excluded===1?" is":"s are")+' excluded from totals (missing price, per-pound, or not in this ad).':"")+'</p>';
+}
+function updateShoppingListUI(){
+  const records=shoppingListRecords();
+  const summary=document.querySelector(".shopping-summary");
+  if(summary)summary.innerHTML=shoppingSummaryHTML(records);
+  for(const entry of records){
+    const row=document.querySelector('[data-list-key="'+entry.key+'"]');
+    if(!row)continue;
+    row.classList.toggle("is-checked",!!entry.record.checked);
+    const count=row.querySelector("[data-count]");
+    if(count)count.textContent=String(quantityOf(entry.record));
+    const estimate=row.querySelector(".list-line-total");
+    if(estimate)estimate.textContent=listEstimateText(entry);
+    const minus=row.querySelector('[data-delta="-1"]');
+    if(minus)minus.disabled=quantityOf(entry.record)<=1;
+  }
+}
+function drawShoppingList(el){
+  const all=shoppingListRecords();
+  const visible=all.filter(e=>(e.deal.name+" "+(e.deal.details||"")).toLowerCase().includes(search.toLowerCase()));
+  const grouped=new Map();
+  for(const entry of visible){
+    const c=entry.deal.category||"Other";
+    if(!grouped.has(c))grouped.set(c,[]);
+    grouped.get(c).push(entry);
+  }
+  el.innerHTML='<div class="shopping-summary">'+shoppingSummaryHTML(all)+'</div>'+
+    (all.length?'<div class="list-tools"><span>'+visible.length+' of '+all.length+' products</span>'+
+    '<button id="list-copy" type="button">Copy list</button></div>':
+    '<div class="empty">Your list is empty. Add BOGO deals from the Deals tab.</div>')+
+    [...grouped.entries()].map(([group,entries])=>
+      '<section class="list-category"><h3>'+esc(group)+' <span>'+entries.length+'</span></h3>'+
+      entries.map(e=>{
+        const d=e.deal,r=e.record,q=quantityOf(r),key=esc(e.key);
+        return '<article class="shopping-row'+(r.checked?" is-checked":"")+'" data-list-key="'+key+'">'+
+          '<input class="shopping-check" type="checkbox" data-check="'+key+'" aria-label="Mark '+esc(d.name)+' purchased"'+(r.checked?" checked":"")+'>'+
+          '<div class="list-thumb"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading…</span></div></div>'+
+          '<div class="list-row-main"><div class="list-product-name">'+esc(d.name)+'</div>'+
+          (d.details||d.size?'<div class="list-product-size">'+esc(d.details||d.size)+'</div>':"")+
+          '<div class="list-product-price">BOGO '+priceText(d)+(e.live?"":' · <span>Not in selected ad</span>')+'</div>'+
+          '<div class="list-row-actions"><div class="quantity-control" aria-label="Quantity for '+esc(d.name)+'">'+
+          '<button type="button" data-step="'+key+'" data-delta="-1" aria-label="Decrease quantity"'+(q<=1?" disabled":"")+'>−</button>'+
+          '<span data-count="'+key+'">'+q+'</span>'+
+          '<button type="button" data-step="'+key+'" data-delta="1" aria-label="Increase quantity">+</button></div>'+
+          '<div class="list-line-total">'+esc(listEstimateText(e))+'</div></div>'+
+          '<button type="button" class="list-remove" data-remove="'+key+'">Remove</button></div></article>';
+      }).join("")+'</section>').join("")+
+    (all.length?'<p class="shopping-footnote">A single item is full price; two cost the regular price of one. Prices vary by store.</p>':"");
+  observeImages(visible.map(x=>x.deal));
+  document.querySelectorAll("[data-check]").forEach(el=>el.onchange=()=>{
+    const item=shoppingItems[el.dataset.check];
+    if(!item)return;
+    item.checked=el.checked;save();updateShoppingListUI();
+  });
+  document.querySelectorAll("[data-step]").forEach(btn=>btn.onclick=()=>{
+    const item=shoppingItems[btn.dataset.step];
+    if(!item)return;
+    item.quantity=Math.min(99,Math.max(1,quantityOf(item)+Number(btn.dataset.delta)));
+    save();updateShoppingListUI();
+  });
+  document.querySelectorAll("[data-remove]").forEach(btn=>btn.onclick=()=>{
+    const key=btn.dataset.remove,item=shoppingItems[key];
+    if(!item)return;
+    removeShoppingItem(item);
+    draw();
+    const count=$("#listbtn");
+    if(count)count.textContent="List ("+shoppingItemCount()+")";
+  });
+  if($("#list-copy"))$("#list-copy").onclick=()=>{
+    const text=all.map(e=>(e.record.checked?"✓ ":"☐ ")+quantityOf(e.record)+" × "+e.deal.name+
+      " — "+(estimateShoppingItem(e).available?listEstimateText(e):"Price not confirmed")).join("\n");
+    navigator.clipboard.writeText(text).catch(error=>console.warn("Copy unavailable",error));
+  };
+}
 function render(){let cats=["All",...[...new Set(deals.map(x=>x.category||"Other"))].sort(compareCategories)];const browseTools=view==="deals"?
   '<div class="browse-tools"><label class="sort-control" for="deal-sort"><span>Sort</span><select id="deal-sort" aria-label="Sort deals"><option value="category"'+(browsePreferences.sort==="category"?' selected':"")+
   '>My category order</option><option value="price-asc"'+(browsePreferences.sort==="price-asc"?' selected':"")+
@@ -350,7 +478,7 @@ if($("#filter-reset"))$("#filter-reset").onclick=()=>{
   browsePreferences={...browsePreferences,...browseDefaults};
   saveBrowsePreferences();
   render();
-};document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;search="";render();window.scrollTo(0,0)});draw()}function draw(){let el=$("#body");if(view==="changelog"){el.innerHTML='<section class="panel"><h2>Version history</h2><p>Current version: v'+APP_VERSION+'</p><div class="changelog"><h3>v0.9.9 — Deal browsing and filters</h3><p>Added compact sorting by category, price and product name, with an optional filter drawer for coupons, alcohol and maximum deal price. Preferences are saved on-device and do not change the default category order.</p><h3>v0.9.8 — Faster, more reliable photos</h3><p>Prioritizes locally cached images before third-party requests, avoids photo collisions between similar products, and preserves found photos across weekly catalog changes.</p><h3>v0.9.7 — Dated weekly ads</h3><p>Shows sale dates and current, upcoming, or expired status; lets you switch weeks when a verified preview is available.</p><h3>v0.9.6 — Compact deal cards</h3><p>Removed stretched vertical gaps between product names, sizes and prices, and hid empty size labels.</p><h3>v0.9.5 — Automatic PWA updates</h3><p>On launch, return, and while open, the app checks the latest deployed build and silently refreshes when a new one is available. The service worker prefers network-fresh code and deals, using cache only offline.</p><h3>v0.9.4 — Photo brightness and category preferences</h3><p>Corrected dark product images by blending against a light warm image surface, and reordered categories to prioritize frozen, pantry, dairy, produce and meat.</p><h3>v0.9.3 — Shopping order and card cleanup</h3><p>Essential grocery categories first, alcohol last, concise per-item pricing, and safe formatting for unknown prices. Warmer photo presentation.</p><h3>v0.8.1 — Simpler image browsing</h3><p>One-tap Google Images search for every deal. Automated image discovery paused to keep maintenance lightweight.</p><h3>v0.8 — Weekly automation</h3><p>Scheduled deal imports, validation and safe publishing, with manual ad URL fallback.</p><h3>v0.7 — Photo database</h3><p>Persistent image suggestions, manual approval and automated caching.</p><h3>v0.6 — Product photos</h3><p>Cached and validated product photos, card image containment, image attribution.</p><h3>v0.5 — Full weekly catalog</h3><p>150 Publix offers, price ranges and photo matching.</p><h3>v0.4 — Navigation</h3><p>Deals, Lists, Favorites, saved favorites.</p><h3>v0.3 — Everyday design</h3><p>Dark layout, shared typography and consistent cards.</p><h3>v0.2 — Gold branding</h3><p>Gold color system, b. logo and icons.</p><h3>v0.1 — First build</h3><p>Search, filters, shopping list, import and GitHub Pages.</p></div><p>Development milestones reconstructed from GitHub commits.</p><button class="action" id="back-to-deals">Back to deals</button></section>';$("#back-to-deals").onclick=()=>{view="deals";render()};return}if(view==="import"){el.innerHTML='<section class="panel"><h2>Import deal text</h2><p>Paste lines like: Product Name, 16 oz, BOGO $5.99. Imports are saved on this device.</p><textarea id="raw" placeholder="Paste BOGO listings here"></textarea><div class="actions"><button class="action primary" id="parse">Import text</button></div><p id="status"></p></section>';$("#parse").onclick=()=>{let lines=$("#raw").value.split(/\n+/).map(x=>x.trim()).filter(x=>/BOGO/i.test(x));let added=lines.map((s,i)=>{let m=s.match(/BOGO\s*\$([\d.]+)/i);return{id:"manual-"+Date.now()+"-"+i,name:s.split(/,?\s*BOGO/i)[0],category:"Imported",price:m?Number(m[1]):null,details:s}});deals=[...added,...deals];localStorage.setItem("bogo-imports",JSON.stringify(added.concat(JSON.parse(localStorage.getItem("bogo-imports")||"[]"))));$("#status").textContent=added.length+" listings imported.";view="deals";render()};return}let items=deals.filter(d=>(view==="list"?isListed(d):view==="favorites"?isFavorite(d):true)&&(category==="All"||view==="list"||d.category===category)&&((d.name+" "+(d.details||"")).toLowerCase().includes(search.toLowerCase()))&&(view!=="deals"||matchesBrowseFilters(d)));if(view==="deals")items.sort(compareBrowseDeals);else items.sort((a,b)=>compareCategories(a.category||"Other",b.category||"Other"));el.innerHTML=(view==="deals"?weekBanner():"")+'<div class="meta">'+(view==="list"?"Shopping list":view==="favorites"?"Favorite products":"Available deals")+' · '+items.length+' items'+(view==="list"?'<button class="action" id="copy" style="float:right">Copy list</button>':"")+'</div><div class="grid">'+items.map(d=>'<article class="deal"><div class="picture"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading photo…</span></div></div><div class="info">'+'<div class="name">'+esc(d.name)+'</div>'+(d.imageVariant?'<div class="image-variant">Representative: '+esc(d.imageVariant)+'</div>':'')+(d.details||d.size?'<div class="size">'+esc(d.details||d.size)+'</div>':"")+'<div class="price">BOGO '+priceText(d)+'</div>'+(eachPrice(d)?'<div class="each">'+eachPrice(d)+'</div>':"")+(d.coupon?'<div class="coupon">'+esc(d.coupon)+'</div>':"")+'<button data-id="'+esc(d.id)+'">'+(isListed(d)?"Remove from list":"+ Add to list")+'</button><button class="favorite-btn" data-fav="'+esc(d.id)+'" aria-label="Toggle favorite">'+(isFavorite(d)?'♥ Favorited':'♡ Favorite')+'</button></div></article>').join("")+'</div>'+(items.length?"":'<div class="empty">No matching deals.</div>');observeImages(items);document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.id);if(!d)return;toggleShoppingItem(d);if(view==="deals"){b.textContent=isListed(d)?"Remove from list":"+ Add to list";const count=$("#listbtn");if(count)count.textContent="List ("+shoppingItemCount()+")"}else render()});document.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.fav);if(!d)return;if(isFavorite(d)){favorites.delete(d.id);favoriteNames.delete(productKey(d))}else{favorites.add(d.id);favoriteNames.add(productKey(d))}saveFavorites();if(view==="deals")b.textContent=isFavorite(d)?"♥ Favorited":"♡ Favorite";else render()});if($("#copy"))$("#copy").onclick=()=>navigator.clipboard.writeText(items.map(x=>x.name+" — BOGO "+priceText(x)).join("\n"))}async function init(){
+};document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;search="";render();window.scrollTo(0,0)});draw()}function draw(){let el=$("#body");if(view==="changelog"){el.innerHTML='<section class="panel"><h2>Version history</h2><p>Current version: v'+APP_VERSION+'</p><div class="changelog"><h3>v0.9.9 — Deal browsing and filters</h3><p>Added compact sorting by category, price and product name, with an optional filter drawer for coupons, alcohol and maximum deal price. Preferences are saved on-device and do not change the default category order.</p><h3>v0.9.8 — Faster, more reliable photos</h3><p>Prioritizes locally cached images before third-party requests, avoids photo collisions between similar products, and preserves found photos across weekly catalog changes.</p><h3>v0.9.7 — Dated weekly ads</h3><p>Shows sale dates and current, upcoming, or expired status; lets you switch weeks when a verified preview is available.</p><h3>v0.9.6 — Compact deal cards</h3><p>Removed stretched vertical gaps between product names, sizes and prices, and hid empty size labels.</p><h3>v0.9.5 — Automatic PWA updates</h3><p>On launch, return, and while open, the app checks the latest deployed build and silently refreshes when a new one is available. The service worker prefers network-fresh code and deals, using cache only offline.</p><h3>v0.9.4 — Photo brightness and category preferences</h3><p>Corrected dark product images by blending against a light warm image surface, and reordered categories to prioritize frozen, pantry, dairy, produce and meat.</p><h3>v0.9.3 — Shopping order and card cleanup</h3><p>Essential grocery categories first, alcohol last, concise per-item pricing, and safe formatting for unknown prices. Warmer photo presentation.</p><h3>v0.8.1 — Simpler image browsing</h3><p>One-tap Google Images search for every deal. Automated image discovery paused to keep maintenance lightweight.</p><h3>v0.8 — Weekly automation</h3><p>Scheduled deal imports, validation and safe publishing, with manual ad URL fallback.</p><h3>v0.7 — Photo database</h3><p>Persistent image suggestions, manual approval and automated caching.</p><h3>v0.6 — Product photos</h3><p>Cached and validated product photos, card image containment, image attribution.</p><h3>v0.5 — Full weekly catalog</h3><p>150 Publix offers, price ranges and photo matching.</p><h3>v0.4 — Navigation</h3><p>Deals, Lists, Favorites, saved favorites.</p><h3>v0.3 — Everyday design</h3><p>Dark layout, shared typography and consistent cards.</p><h3>v0.2 — Gold branding</h3><p>Gold color system, b. logo and icons.</p><h3>v0.1 — First build</h3><p>Search, filters, shopping list, import and GitHub Pages.</p></div><p>Development milestones reconstructed from GitHub commits.</p><button class="action" id="back-to-deals">Back to deals</button></section>';$("#back-to-deals").onclick=()=>{view="deals";render()};return}if(view==="import"){el.innerHTML='<section class="panel"><h2>Import deal text</h2><p>Paste lines like: Product Name, 16 oz, BOGO $5.99. Imports are saved on this device.</p><textarea id="raw" placeholder="Paste BOGO listings here"></textarea><div class="actions"><button class="action primary" id="parse">Import text</button></div><p id="status"></p></section>';$("#parse").onclick=()=>{let lines=$("#raw").value.split(/\n+/).map(x=>x.trim()).filter(x=>/BOGO/i.test(x));let added=lines.map((s,i)=>{let m=s.match(/BOGO\s*\$([\d.]+)/i);return{id:"manual-"+Date.now()+"-"+i,name:s.split(/,?\s*BOGO/i)[0],category:"Imported",price:m?Number(m[1]):null,details:s}});deals=[...added,...deals];localStorage.setItem("bogo-imports",JSON.stringify(added.concat(JSON.parse(localStorage.getItem("bogo-imports")||"[]"))));$("#status").textContent=added.length+" listings imported.";view="deals";render()};return}if(view==="list"){drawShoppingList(el);return}let items=deals.filter(d=>(view==="list"?isListed(d):view==="favorites"?isFavorite(d):true)&&(category==="All"||view==="list"||d.category===category)&&((d.name+" "+(d.details||"")).toLowerCase().includes(search.toLowerCase()))&&(view!=="deals"||matchesBrowseFilters(d)));if(view==="deals")items.sort(compareBrowseDeals);else items.sort((a,b)=>compareCategories(a.category||"Other",b.category||"Other"));el.innerHTML=(view==="deals"?weekBanner():"")+'<div class="meta">'+(view==="list"?"Shopping list":view==="favorites"?"Favorite products":"Available deals")+' · '+items.length+' items'+(view==="list"?'<button class="action" id="copy" style="float:right">Copy list</button>':"")+'</div><div class="grid">'+items.map(d=>'<article class="deal"><div class="picture"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading photo…</span></div></div><div class="info">'+'<div class="name">'+esc(d.name)+'</div>'+(d.imageVariant?'<div class="image-variant">Representative: '+esc(d.imageVariant)+'</div>':'')+(d.details||d.size?'<div class="size">'+esc(d.details||d.size)+'</div>':"")+'<div class="price">BOGO '+priceText(d)+'</div>'+(eachPrice(d)?'<div class="each">'+eachPrice(d)+'</div>':"")+(d.coupon?'<div class="coupon">'+esc(d.coupon)+'</div>':"")+'<button data-id="'+esc(d.id)+'">'+(isListed(d)?"Remove from list":"+ Add to list")+'</button><button class="favorite-btn" data-fav="'+esc(d.id)+'" aria-label="Toggle favorite">'+(isFavorite(d)?'♥ Favorited':'♡ Favorite')+'</button></div></article>').join("")+'</div>'+(items.length?"":'<div class="empty">No matching deals.</div>');observeImages(items);document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.id);if(!d)return;toggleShoppingItem(d);if(view==="deals"){b.textContent=isListed(d)?"Remove from list":"+ Add to list";const count=$("#listbtn");if(count)count.textContent="List ("+shoppingItemCount()+")"}else render()});document.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.fav);if(!d)return;if(isFavorite(d)){favorites.delete(d.id);favoriteNames.delete(productKey(d))}else{favorites.add(d.id);favoriteNames.add(productKey(d))}saveFavorites();if(view==="deals")b.textContent=isFavorite(d)?"♥ Favorited":"♡ Favorite";else render()});if($("#copy"))$("#copy").onclick=()=>navigator.clipboard.writeText(items.map(x=>x.name+" — BOGO "+priceText(x)).join("\n"))}async function init(){
   async function readWeek(path,optional=false){
     try{
       const response=await fetch(path,{cache:"no-store"});
