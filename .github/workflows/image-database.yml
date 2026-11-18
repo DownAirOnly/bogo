@@ -1,8 +1,6 @@
 name: Build product photo candidate database
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '15 14 * * 2,5'
   push:
     paths:
       - scripts/build_image_database.py
