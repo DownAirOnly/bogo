@@ -2,6 +2,11 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.12.5 — November 18, 2026
+- Add the original source-ad and coupon-matchups link to the product details sheet when available.
+- Preserve source links in favorite snapshots and resolve the correct sale week for products with IDs reused across advertisements.
+- Do not invent direct links to clipped coupons; source-ad links are for verification.
+
 ## v0.12.4 — November 18, 2026
 - Collect coupon and rebate leads for unchecked, currently advertised shopping-list products in one optional expandable section.
 - Keep offer names linked to providers and quantity warnings visible; coupon savings remain excluded from totals.
