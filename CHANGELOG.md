@@ -2,6 +2,15 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.9.8 — November 17, 2026
+- Prioritize static, locally cached images before external requests.
+- Cache remote image matches by complete product name and package size instead of a shortened query.
+- Reuse successful downloaded product photos across weekly catalog releases.
+- Restore previous build photo caches, and cap image searches so a slow provider does not indefinitely block website deployment.
+- Prefer barcode-exact Open Food Facts photos when a product code is available.
+- Reject very narrow banner images rather than displaying them as package photos.
+- Full live importer verification is still pending because the publisher sometimes rejects direct automated requests.
+
 ## v0.9.7 — November 17, 2026
 - Rebuilt the broken BOGO parser and added article discovery through multiple public sources.
 - Added protected current/next-week publication, auto-promotion and small offline parser checks.
