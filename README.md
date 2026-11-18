@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.12.4.**
+**Current app version: v0.12.5.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -24,6 +24,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - Shopping list summaries distinguish total estimated spending and what remains to buy. Use Share on iPhone or Copy to send quantities, checkmarks, and provisional totals.
 - Coupon and rebate rows give a cautious minimum-quantity warning when all listed offers have a higher clear purchase requirement than the selected quantity; they do not assume an offer is clipped or combinable.
 - Lists also collect coupons/rebates for unpurchased currently advertised items in an optional **Coupons and rebates to check** section, with linked offer names and quantity warnings.
+- The More/product detail window links to the original iHeartPublix weekly-ad and coupon-matchup article whenever the product has a verified catalog source. Favorite snapshots retain their original ad source for later reference.
 - The selected sale week is remembered between launches while it is still available. New-deal comparisons are cached for faster mobile browsing and the week banner shows counts versus the preceding ad.
 - The app displays a Retry action if none of the published weekly catalogs can load, and a filter reset when restrictive filters leave no results.
 - On a newer week's list, **Bring over unchecked items** carries unpurchased products from the most recent earlier list. It preserves quantities and skips duplicates, without modifying the old list. Items not found in the new advertisement are excluded from BOGO cost and savings estimates.
