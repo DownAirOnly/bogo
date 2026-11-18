@@ -7,6 +7,7 @@ on:
     - cron: '55 13 * * 3,4'
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -39,6 +40,18 @@ jobs:
           key: bogo-verified-photos-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             bogo-verified-photos-
+      # Rescue source: the successful 303-photo build, visually spot-checked.
+      # Per-run cache and future searches maintain images as the catalog changes.
+      - name: Restore audited product-photo snapshot
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: github-pages
+          run-id: 44257170248
+          github-token: ${{ github.token }}
+          path: /tmp/bogo-photo-backup
+      - name: Merge prior product photos without replacing newer matches
+        run: python scripts/restore_photo_snapshot.py /tmp/bogo-photo-backup/artifact.tar
       - name: Find and cache product photos automatically
         timeout-minutes: 8
         continue-on-error: true
