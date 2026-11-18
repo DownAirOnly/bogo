@@ -9,6 +9,8 @@ from io import BytesIO
 from pathlib import Path
 import shutil
 from urllib.parse import urlencode, urlparse
+from html.parser import HTMLParser
+import html
 from urllib.request import Request, urlopen
 from PIL import Image, ImageOps
 import json
@@ -25,7 +27,7 @@ HEADERS = {
 STOP = {"the", "and", "for", "with", "size", "pack", "products",
         "organic", "assorted", "variety", "flavor", "flavored", "select"}
 REJECT = {"recipe", "recipes", "casserole", "casseroles", "game", "gaming",
-          "showdown", "wallpaper", "screenshot", "photo", "logo", "poster",
+          "showdown", "wallpaper", "screenshot", "logo", "poster",
           "artwork", "drawing", "template", "illustration", "sticker",
           "ribbon", "sports", "football", "baseball", "sponsored"}
 def tokens(s):
@@ -80,7 +82,11 @@ def plausible_product_match(query, brand, product_name):
 def allowed_image(url):
     if not url or not isinstance(url, str): return False
     p = urlparse(url)
-    return p.scheme == "https" and (p.hostname or "").lower() == "images.openfoodfacts.org"
+    if p.scheme != "https": return False
+    host = (p.hostname or "").lower()
+    return (host == "images.openfoodfacts.org" or
+            bool(re.fullmatch(r"encrypted-tbn\d*\.gstatic\.com", host)) or
+            bool(re.fullmatch(r"(?:tse|ts)\d*\.mm\.bing\.net", host)))
 
 def get(url, limit=4_000_000, timeout=7):
     with urlopen(Request(url, headers=HEADERS), timeout=timeout) as response:
@@ -123,6 +129,69 @@ def food_facts_images(q):
         if allowed_image(url): found.append(url)
     return list(dict.fromkeys(found))[:4]
 
+
+def metadata_plausible(q, title):
+    label = html.unescape(str(title or "")).strip()
+    if len(label) < 10 or len(label) > 260:
+        return False
+    if re.search(r"^(?:image result for|search results for|google images|bing images)\b", label, re.I):
+        return False
+    return plausible_product_match(q, "", label)
+
+def google_labeled_images(q):
+    """Only thumbnails with independently supplied relevant result titles."""
+    url = "https://www.google.com/search?" + urlencode({
+        "tbm": "isch", "q": q + " grocery can package product front", "num": 20, "safe": "active"
+    })
+    try:
+        body = get(url, limit=1_500_000, timeout=7).decode("utf-8", "ignore")
+    except Exception:
+        return []
+    class Results(HTMLParser):
+        def __init__(self): super().__init__(); self.images=[]
+        def handle_starttag(self, tag, attrs):
+            if tag != "img": return
+            a = dict(attrs)
+            label = a.get("alt") or a.get("aria-label") or a.get("title") or ""
+            if not metadata_plausible(q, label): return
+            for field in ("data-src", "src"):
+                image_url = html.unescape(a.get(field) or "")
+                if allowed_image(image_url):
+                    self.images.append(image_url)
+                    return
+    parser = Results()
+    try: parser.feed(body)
+    except Exception: return []
+    return list(dict.fromkeys(parser.images))[:5]
+
+def bing_labeled_images(q):
+    """Require the actual Bing result title, never an unlabeled thumbnail."""
+    url = "https://www.bing.com/images/search?" + urlencode({
+        "q": q + " grocery can package front", "first": 1, "adlt": "strict"
+    })
+    try:
+        body = get(url, limit=1_500_000, timeout=7).decode("utf-8", "ignore")
+    except Exception:
+        return []
+    class Results(HTMLParser):
+        def __init__(self): super().__init__(); self.images=[]
+        def handle_starttag(self, tag, attrs):
+            if tag != "a": return
+            a = dict(attrs)
+            if not a.get("m"): return
+            try:
+                meta = json.loads(html.unescape(a["m"]))
+            except (TypeError, ValueError):
+                return
+            title = meta.get("t") or meta.get("desc") or a.get("title") or ""
+            url = meta.get("turl") or ""
+            if metadata_plausible(q, title) and allowed_image(url):
+                self.images.append(url)
+    parser = Results()
+    try: parser.feed(body)
+    except Exception: return []
+    return list(dict.fromkeys(parser.images))[:5]
+
 def save_photo(url, dest):
     if not allowed_image(url): return False
     try:
@@ -159,9 +228,10 @@ def build(d):
                 pass
     q = query_for(d)
     if not q: return "missing"
-    # Exact-barcode image first; then strictly metadata-matched package photos.
-    # No Google/Bing/Wikimedia thumbnails without product identity evidence.
-    for url in barcode_images(d) + food_facts_images(q):
+    # Known barcode, structured product metadata, then public image-search
+    # thumbnails ONLY when the result's title names the brand and product.
+    for url in (barcode_images(d) + food_facts_images(q) +
+                google_labeled_images(q) + bing_labeled_images(q)):
         if save_photo(url, target): return "saved"
     return "missing"
 def main():
