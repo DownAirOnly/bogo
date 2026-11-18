@@ -58,6 +58,238 @@
       "dealName": "Stacy’s Pita Chips, Bagel or Thins",
       "status": "needs-review",
       "options": []
+    },
+    "athenos-feta-cheese-crumbled-or-chunk": {
+      "dealName": "Athenos Feta Cheese, Crumbled or Chunk",
+      "status": "needs-review",
+      "options": []
+    },
+    "borden-cheese-singles": {
+      "dealName": "Borden Cheese Singles",
+      "status": "needs-review",
+      "options": []
+    },
+    "cabot-cheese-bar-or-shredded-cheese": {
+      "dealName": "Cabot Cheese Bar or Shredded Cheese",
+      "status": "needs-review",
+      "options": []
+    },
+    "chobani-yogurt-tub": {
+      "dealName": "Chobani Yogurt Tub",
+      "status": "needs-review",
+      "options": []
+    },
+    "daisy-sour-cream": {
+      "dealName": "Daisy Sour Cream",
+      "status": "needs-review",
+      "options": []
+    },
+    "dean-s-dip": {
+      "dealName": "Dean’s Dip",
+      "status": "needs-review",
+      "options": []
+    },
+    "horizon-organic-coffee-creamer": {
+      "dealName": "Horizon Organic Coffee Creamer",
+      "status": "needs-review",
+      "options": []
+    },
+    "i-can-t-believe-it-s-not-butter-spread-spray-or-better-butter": {
+      "dealName": "I Can’t Believe It’s Not Butter! Spread/Spray or Better Butter",
+      "status": "needs-review",
+      "options": []
+    },
+    "land-o-lakes-butter": {
+      "dealName": "Land O Lakes Butter",
+      "status": "needs-review",
+      "options": []
+    },
+    "nestl-coffee-mate-creamer": {
+      "dealName": "Nestlé Coffee Mate Creamer",
+      "status": "needs-review",
+      "options": []
+    },
+    "nestl-toll-house-cookie-dough": {
+      "dealName": "Nestlé Toll House Cookie Dough",
+      "status": "needs-review",
+      "options": []
+    },
+    "pillsbury-crescents-pie-crusts-rolls-cookies-or-grands-biscuits": {
+      "dealName": "Pillsbury Crescents, Pie Crusts, Rolls, Cookies or Grands! Biscuits",
+      "status": "needs-review",
+      "options": []
+    },
+    "plugr-premium-european-style-butter": {
+      "dealName": "Plugrá Premium European Style Butter",
+      "status": "needs-review",
+      "options": []
+    },
+    "polly-o-ricotta-cheese": {
+      "dealName": "Polly-O Ricotta Cheese",
+      "status": "needs-review",
+      "options": []
+    },
+    "queso-melt-cheese-dip": {
+      "dealName": "Queso-Melt Cheese Dip",
+      "status": "needs-review",
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
+    },
+    "reddi-wip-dairy-whipped-topping": {
+      "dealName": "Reddi Wip Dairy Whipped Topping",
+      "status": "needs-review",
+      "options": []
+    },
+    "sargento-shredded-or-chunk-cheese": {
+      "dealName": "Sargento Shredded or Chunk Cheese",
+      "status": "needs-review",
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
+    },
+    "siggi-s-skyr-yogurt-drinkable-or-coconut-milk-alternative": {
+      "dealName": "Siggi’s Skyr Yogurt, Drinkable or Coconut Milk Alternative",
+      "status": "needs-review",
+      "options": []
+    },
+    "eckrich-smoked-sausage-or-polska-kielbasa": {
+      "dealName": "Eckrich Smoked Sausage or Polska Kielbasa",
+      "status": "needs-review",
+      "options": []
+    },
+    "jimmy-dean-bacon": {
+      "dealName": "Jimmy Dean Bacon",
+      "status": "needs-review",
+      "options": []
+    },
+    "prime-fresh-delicatessen-lunch-meats-by-smithfield": {
+      "dealName": "Prime Fresh Delicatessen Lunch Meats by Smithfield",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-young-turkey-breast-with-ribs-and-gravy-packets": {
+      "dealName": "Publix Young Turkey Breast With Ribs and Gravy Packets",
+      "status": "needs-review",
+      "options": []
+    },
+    "reser-s-main-st-bistro-signature-sides": {
+      "dealName": "Reser’s Main St Bistro Signature Sides",
+      "status": "needs-review",
+      "options": []
+    },
+    "smithfield-bacon": {
+      "dealName": "Smithfield Bacon",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-medium-shrimp-platter-with-sauce": {
+      "dealName": "Publix Medium Shrimp Platter With Sauce",
+      "status": "needs-review",
+      "options": []
+    },
+    "athens-phyllo-bites": {
+      "dealName": "Athens Phyllo Bites",
+      "status": "needs-review",
+      "options": []
     }
   }
 }
