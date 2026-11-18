@@ -29,6 +29,31 @@ def search(q):
             print('Source unavailable',type(exc).__name__,str(exc)[:100])
             time.sleep(2)
     return []
+def commons_search(q):
+    """Search Wikimedia Commons file titles; candidates require manual review."""
+    params=urllib.parse.urlencode({
+        "action":"query","generator":"search","gsrsearch":q+" filetype:bitmap",
+        "gsrnamespace":6,"gsrlimit":8,"prop":"imageinfo",
+        "iiprop":"url|extmetadata","iiurlwidth":640,"format":"json"
+    })
+    req=urllib.request.Request("https://commons.wikimedia.org/w/api.php?"+params,
+        headers={"User-Agent":"bogo-photo-guide/0.8 (https://github.com/DownAirOnly/bogo)"})
+    with urllib.request.urlopen(req,timeout=15) as response:
+        pages=json.load(response).get("query",{}).get("pages",{})
+    result=[]
+    for page in pages.values():
+        info=(page.get("imageinfo") or [{}])[0]
+        url=info.get("thumburl") or info.get("url")
+        if not url or not url.startswith("https://"):continue
+        title=page.get("title","").removeprefix("File:")
+        match=score(q,{"brands":"","product_name":title.replace("_"," ")})
+        if match<0.45:continue
+        meta=info.get("extmetadata",{})
+        result.append({"name":title,"brand":"","quantity":"","barcode":"",
+            "imageUrl":url,"source":"Wikimedia Commons","sourcePage":info.get("descriptionurl",""),
+            "license":re.sub("<[^>]+>","",meta.get("LicenseShortName",{}).get("value","")),
+            "matchScore":match})
+    return result
 def score(q,p):
     wanted = words(q)
     found = words((p.get("brands") or "")+" "+(p.get("product_name") or ""))
@@ -43,7 +68,9 @@ def main():
     attempted=0
     for d in catalog["deals"]:
         key=re.sub(r"[^a-z0-9]+","-",d["name"].lower()).strip("-")
-        if d.get("image") or key in db["products"] or key in candidates["products"]: continue
+        if d.get("image") or key in db["products"]: continue
+        existing=candidates["products"].get(key)
+        if existing and (existing.get("options") or existing.get("status")!="needs-review"):continue
         if attempted>=15: break
         attempted+=1
         if any(word in d.get("category","").lower() for word in ("beer","wine","alcohol")): continue
@@ -57,6 +84,9 @@ def main():
                 rank=score(q,p)
                 if rank<0.4:continue
                 options.append({"name":p.get("product_name",""),"brand":p.get("brands",""),"quantity":p.get("quantity",""),"barcode":p.get("code",""),"imageUrl":url,"source":"Open Food Facts","matchScore":rank})
+            if not options:
+                try: options=commons_search(q)
+                except Exception as exc: print("Commons unavailable:",type(exc).__name__,str(exc)[:90])
             options.sort(key=lambda x:-x["matchScore"])
             candidates["products"][key]={"dealName":d["name"],"status":"needs-review","options":options[:5]}
             added+=1
