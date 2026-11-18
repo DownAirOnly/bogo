@@ -147,13 +147,9 @@ BAD_PHOTO_TERMS = REJECT | {
     "before", "after", "meal", "dish", "dinner", "cooking",
 }
 def normalized_product_tokens(value):
-    t = tokens(value)
-    # Brand spellings in actual product titles sometimes use RO*TEL, Ro-Tel.
-    if len(t) >= 2 and t[:2] == ["tel", "ro"]:
-        return ["rotel"] + t[2:]
-    if len(t) >= 2 and t[:2] == ["ro", "tel"]:
-        return ["rotel"] + t[2:]
-    return t
+    # RO*TEL / Ro-Tel is the same brand as Rotel.
+    cleaned = re.sub(r"\bro[\s\W_]*tel\b", "rotel", str(value or ""), flags=re.I)
+    return tokens(cleaned)
 
 def title_match_score(query, label, source_url=""):
     """Require product type + brand; prefer retailer product pages over stock shots."""
@@ -170,7 +166,9 @@ def title_match_score(query, label, source_url=""):
         return -1
     secondary = wanted[1:]
     hits = sum(w in have for w in secondary)
-    if hits < 1:
+    if hits < (1 if len(wanted) == 2 else 2):
+        return -1
+    if len(wanted) > 2 and not any(w in have for w in wanted[2:]):
         return -1
     # Products with long, multi-variant names can match an advertised variant.
     score = 3 * hits + (2 if wanted[:2] == ["del", "monte"] and "monte" in have else 0)
