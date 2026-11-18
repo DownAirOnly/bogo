@@ -2,6 +2,30 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.12.0 — November 18, 2026
+- Shopping lists now show **Still to buy** as a separate estimate excluding already checked products, while preserving full-trip spending and BOGO savings.
+- Share lists through iPhone's native share sheet; use Copy as a fallback, including quantities, checked states, prices and limitations.
+
+## v0.11.9 — November 18, 2026
+- Persist favorite products across weekly changes using locally saved product snapshots.
+- Continue displaying favorites that are no longer advertised, without showing their expired BOGO price as active.
+- When unfavoriting, clean matching historical IDs and aliases to avoid reappearing hearts.
+
+## v0.11.8 — November 18, 2026
+- Automatically archive outgoing verified weekly BOGOs to `data/previous-deals.json` before promoting a new sale period.
+- Publish archived catalogs through the existing SHA-guarded workflow, retaining previous-week deal comparisons and historical list context.
+- Add a regression check against older snapshots overwriting newer archived dates.
+
+## v0.11.7 — November 18, 2026
+- Carry unchecked products to a new week using conservative product-name matching.
+- Reconcile returning products to the newer week's listing and BOGO price, but keep unmatched items as unpriced until verified.
+- Skip duplicates, preserve quantities and leave original lists unchanged.
+
+## v0.11.6 — November 18, 2026
+- Compare adjacent published weekly catalogs to distinguish products newly advertised from returning deals.
+- Label newly advertised products on deal cards and offer a saved New this week filter when comparison data exists.
+- Keep previously published catalog data available for comparisons after its sale ends.
+
 ## v0.11.5 — November 18, 2026
 - Added an optional **Bring over unchecked items** action on later-week shopping lists.
 - Carries unpurchased items from the most recent earlier list, preserving quantities while skipping duplicates.
