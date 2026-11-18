@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - scripts/cache_images.py
+      - scripts/apply_image_database.py
+      - data/product-images.json
       - .github/workflows/cache-photos.yml
 permissions:
   contents: write
@@ -17,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install image validation
         run: python -m pip install --quiet Pillow
+      - name: Apply approved database entries
+        run: python scripts/apply_image_database.py
       - name: Validate and cache image files
         run: python scripts/cache_images.py
       - name: Commit cached assets
