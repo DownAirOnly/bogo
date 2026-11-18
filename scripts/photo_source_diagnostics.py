@@ -4,6 +4,8 @@ from html.parser import HTMLParser
 from urllib.parse import urlencode
 import html
 import json
+from collections import Counter
+from urllib.parse import urlparse
 sys.path.insert(0, "scripts")
 import build_product_photos as photo
 
@@ -34,7 +36,7 @@ class Parse(HTMLParser):
                 title = meta.get("t") or meta.get("desc") or a.get("title") or ""
                 image = meta.get("turl") or ""
                 if image:
-                    self.bing.append((title[:95], bool(photo.metadata_plausible(self.target,title))))
+                    self.bing.append((title[:95], bool(photo.metadata_plausible(self.target,title)), urlparse(image).hostname, photo.allowed_image(image), image))
             except Exception:
                 pass
 
@@ -54,9 +56,23 @@ def check(q, provider):
         return
     p=Parse();p.target=q;p.feed(body)
     matches=p.alt if provider=="google" else p.bing
-    print(q,provider,"html_bytes",len(body),"candidates",len(matches),
-          "accepted",sum(ok for _,ok in matches),"titles",matches[:7],flush=True)
+    if provider=="bing":
+        print(q,provider,"total",len(matches),"acceptedTitles",sum(x[1] for x in matches),
+              "allowHosts",sum(x[3] for x in matches),"hosts",dict(Counter(x[2] for x in matches)),
+              "titles",[(a,b,c,d) for a,b,c,d,_ in matches[:5]],flush=True)
+        chosen=[x for x in matches if x[1] and x[3]][:2]
+        for x in chosen:
+            try:
+                data=photo.get(x[4],limit=2_000_000,timeout=6)
+                print("IMG_PROBE",q,x[2],"bytes",len(data),flush=True)
+            except Exception as e:
+                print("IMG_PROBE",q,x[2],"FAILED",type(e).__name__,str(e)[:130],flush=True)
+    else:
+        print(q,provider,"candidates",len(matches),"titles",matches[:3],flush=True)
 
 for q in PRODUCTS:
     for provider in ("google","bing"):
         check(q,provider)
+
+# Separate apostrophe-free query to check why Hunt's is returning K-pop results.
+check("Hunts Canned Tomatoes","bing")
