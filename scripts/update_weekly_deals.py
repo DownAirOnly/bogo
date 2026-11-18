@@ -21,6 +21,7 @@ ROOT = "https://www.iheartpublix.com/"
 ARTICLE_CACHE = {}
 MAIN = Path("data/deals.json")
 NEXT = Path("data/next-deals.json")
+PREVIOUS = Path("data/previous-deals.json")
 ARTICLE = re.compile(r"/20\d\d/\d\d/publix-ad-coupons-week-of-\d{1,2}-\d{1,2}-to-\d{1,2}-\d{1,2}", re.I)
 BOGO = re.compile(r"\bBOGO\b|\bbuy\s+one\s+get\s+one\s+free\b", re.I)
 PRICE = re.compile(r"\$\s*(\d+(?:\.\d{1,2})?)(?:\s*[-–—]\s*\$?\s*(\d+(?:\.\d{1,2})?))?", re.I)
@@ -329,6 +330,7 @@ def main():
     # Promote a verified preview when its Thursday sale date has arrived.
     if upcoming and dt.date.fromisoformat(upcoming["saleStart"]) <= today:
         if upcoming["saleStart"] > main["saleStart"]:
+            stage(PREVIOUS, main)
             stage(MAIN, upcoming)
             main = upcoming
 
@@ -364,6 +366,8 @@ def main():
             if start > today and today <= dt.date.fromisoformat(main["saleEnd"]):
                 stage(NEXT, snapshot)
             else:
+                if snapshot["saleStart"] > main["saleStart"]:
+                    stage(PREVIOUS, main)
                 stage(MAIN, snapshot)
                 main = snapshot
             return
