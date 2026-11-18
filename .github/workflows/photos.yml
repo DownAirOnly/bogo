@@ -1,28 +1,10 @@
-name: Enrich BOGO product photos
+name: Legacy photo enrichment (manual only)
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - scripts/enrich_images.py
-      - .github/workflows/photos.yml
-  schedule:
-    - cron: '30 13 * * 4'
 permissions:
-  contents: write
+  contents: read
 jobs:
-  enrich:
+  note:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Match product images
-        run: python scripts/enrich_images.py
-      - name: Commit verified matches
-        run: |
-          if ! git diff --quiet -- data/deals.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/deals.json
-            git commit -m "Add matched BOGO product images"
-            git pull --rebase --autostash origin main
-            git push origin HEAD:main
-          fi
+      - run: echo "Automatic direct photo publication has been retired. Use image-database.yml to collect review candidates, then approve records in data/product-images.json."
