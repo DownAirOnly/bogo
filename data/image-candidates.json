@@ -62,22 +62,226 @@
     "athenos-feta-cheese-crumbled-or-chunk": {
       "dealName": "Athenos Feta Cheese, Crumbled or Chunk",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "borden-cheese-singles": {
       "dealName": "Borden Cheese Singles",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "cabot-cheese-bar-or-shredded-cheese": {
       "dealName": "Cabot Cheese Bar or Shredded Cheese",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "chobani-yogurt-tub": {
       "dealName": "Chobani Yogurt Tub",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "daisy-sour-cream": {
       "dealName": "Daisy Sour Cream",
@@ -87,7 +291,58 @@
     "dean-s-dip": {
       "dealName": "Dean’s Dip",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "horizon-organic-coffee-creamer": {
       "dealName": "Horizon Organic Coffee Creamer",
@@ -97,12 +352,114 @@
     "i-can-t-believe-it-s-not-butter-spread-spray-or-better-butter": {
       "dealName": "I Can’t Believe It’s Not Butter! Spread/Spray or Better Butter",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "land-o-lakes-butter": {
       "dealName": "Land O Lakes Butter",
       "status": "needs-review",
-      "options": []
+      "options": [
+        {
+          "name": "Fromage Blanc Nature",
+          "brand": "Milky Food Professional, SODIPOL",
+          "quantity": "1 kg",
+          "barcode": "6111246721261",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/672/1261/front_fr.118.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "sidi ali",
+          "brand": "Sidi Ali, سيدي علي",
+          "quantity": "33 cl",
+          "barcode": "6111035000430",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0430/front_en.104.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Perly",
+          "brand": "Jaouda, Perly",
+          "quantity": "100 g",
+          "barcode": "6111242100992",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "1,5 l",
+          "barcode": "6111035000058",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/0058/front_en.134.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        },
+        {
+          "name": "Eau minérale naturelle",
+          "brand": "Sidi Ali",
+          "quantity": "2 l",
+          "barcode": "6111035002175",
+          "imageUrl": "https://images.openfoodfacts.org/images/products/611/103/500/2175/front_ar.128.400.jpg",
+          "source": "Open Food Facts",
+          "matchScore": 0.0,
+          "exactMatch": false
+        }
+      ]
     },
     "nestl-coffee-mate-creamer": {
       "dealName": "Nestlé Coffee Mate Creamer",
