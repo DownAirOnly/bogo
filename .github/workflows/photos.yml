@@ -1,10 +1,8 @@
-name: Legacy photo enrichment (manual only)
+name: Retired legacy photo pipeline
 on:
   workflow_dispatch:
-permissions:
-  contents: read
 jobs:
-  note:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Automatic direct photo publication has been retired. Use image-database.yml to collect review candidates, then approve records in data/product-images.json."
+      - run: echo "Legacy photo pipeline retired; use google-images.yml."
