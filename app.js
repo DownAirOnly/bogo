@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s);const APP_VERSION="0.11.2";const storeKey="bogo-shopping-v1";let imageIndex={},deals=[],category="All",search="",list=new Set(JSON.parse(localStorage.getItem(storeKey)||"[]"));let view="deals";let favorites=new Set(JSON.parse(localStorage.getItem("bogo-favorites-v1")||"[]"));const icons={deals:"⌂",list:"☷",favorites:"♡"};const numericPrice=n=>(n===null||n===undefined||n==="")?null:(Number.isFinite(Number(n))&&Number(n)>=0?Number(n):null);
+const $=s=>document.querySelector(s);const APP_VERSION="0.11.3";const storeKey="bogo-shopping-v1";let imageIndex={},deals=[],category="All",search="",list=new Set(JSON.parse(localStorage.getItem(storeKey)||"[]"));let view="deals";let favorites=new Set(JSON.parse(localStorage.getItem("bogo-favorites-v1")||"[]"));const icons={deals:"⌂",list:"☷",favorites:"♡"};const numericPrice=n=>(n===null||n===undefined||n==="")?null:(Number.isFinite(Number(n))&&Number(n)>=0?Number(n):null);
 const money=n=>{const v=numericPrice(n);return v===null?"Price not listed":"$"+(Math.round((v+Number.EPSILON)*100)/100).toFixed(2)};
 function priceRange(d){
   const label=String(d.priceLabel||"");
@@ -296,7 +296,7 @@ function migrateShoppingItems(){
   save();
 }
 function saveFavorites(){localStorage.setItem("bogo-favorites-v1",JSON.stringify([...favorites]));localStorage.setItem(favoriteNameStorage,JSON.stringify([...favoriteNames]))}function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}// Product photos are resolved inside the app. No manual photo links or user setup.
-const imageCacheKey="bogo-product-photos-v3";
+const imageCacheKey="bogo-verified-photos-v1";
 let imageCache={};
 try{imageCache=JSON.parse(localStorage.getItem(imageCacheKey)||"{}")}catch{}
 const pendingImages=new WeakSet();
@@ -313,12 +313,21 @@ function photoCacheKey(d){
 function imageQuery(d){
   return String(d.searchQuery||d.name||"").split(/\s+[—–]\s+/)[0].replace(/\s+(?:or|and\/or)\s+.+$/i,"").replace(/\s*[,;\/]\s+.*$/,"").replace(/\([^)]*\)/g,"").trim();
 }
-function scoreProduct(p,wanted){
-  const available=photoTokens((p.brands||"")+" "+(p.product_name||"")+" "+(p.product_name_en||""));
-  if(!available.length||!wanted.length)return 0;
-  const hits=wanted.filter(t=>available.some(a=>a===t||a.startsWith(t)||t.startsWith(a))).length;
-  const brandHit=wanted[0]&&available.includes(wanted[0])?0.15:0;
-  return hits/wanted.length+brandHit;
+function standardizedPhotoToken(token){
+  if(token.endsWith("ies")&&token.length>5)return token.slice(0,-3)+"y";
+  if(token.endsWith("oes")&&token.length>5)return token.slice(0,-2);
+  if(token.endsWith("s")&&!token.endsWith("ss")&&token.length>4)return token.slice(0,-1);
+  return token;
+}
+function photoMatch(query,product){
+  const wanted=[...new Set(photoTokens(query).map(standardizedPhotoToken))];
+  const brand=new Set(photoTokens(product.brands||"").map(standardizedPhotoToken));
+  const name=new Set(photoTokens((product.product_name_en||"")+" "+(product.product_name||"")).map(standardizedPhotoToken));
+  const all=new Set([...brand,...name]);
+  if(wanted.length<2||all.size<2||!all.has(wanted[0]))return false;
+  const avoid=new Set(["recipe","casserole","showdown","game","wallpaper","screenshot","poster","logo","ribbon","sticker","illustration","artwork","sports","football","baseball"]);
+  if([...name].some(w=>avoid.has(w)))return false;
+  return wanted.slice(0,4).every(w=>all.has(w));
 }
 function safeImage(url){
   if(typeof url!=="string"||!url)return"";
@@ -354,50 +363,32 @@ function imageFromProduct(p){return safeImage(p?.image_front_url||p?.image_front
 async function openFoodFactsCandidates(d){
   const result=[];
   const code=d.imageProductCode;
-  if(code){
+  if(code&&/^\d{8,14}$/.test(String(code))){
     try{
       const u="https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,brands,image_front_url,image_front_small_url,image_url";
       const j=await fetchJson(u);
-      const p=j.product;
-      const url=imageFromProduct(p);
+      const url=imageFromProduct(j.product);
       if(url)result.push(url);
-    }catch(e){console.debug("Barcode photo lookup failed",e)}
+    }catch(e){console.debug("Barcode lookup unavailable",e)}
   }
-  const query=imageQuery(d),wanted=photoTokens(query);
-  if(!query)return result;
-  const variants=[query];
-  const words=query.split(/\s+/);
-  if(words.length>3)variants.push(words.slice(0,3).join(" "));
-  for(const q of variants){
-    try{
-      const params=new URLSearchParams({search_terms:q,page_size:"20",fields:"product_name,product_name_en,brands,image_front_url,image_front_small_url,image_url"});
-      const j=await fetchJson("https://world.openfoodfacts.org/api/v2/search?"+params);
-      const candidates=(j.products||[]).filter(p=>imageFromProduct(p)).map(p=>({url:imageFromProduct(p),score:scoreProduct(p,wanted)})).sort((a,b)=>b.score-a.score);
-      // Prefer an identifiable brand/product; retain the closest result for broader listings.
-      for(const c of candidates.filter(c=>c.score>=0.45).slice(0,5))if(!result.includes(c.url))result.push(c.url);
-      if(result.length)break;
-    }catch(e){console.debug("Product photo lookup failed",e)}
-  }
-  return result;
-}
-async function commonsCandidates(d){
   const query=imageQuery(d);
-  if(!query)return[];
+  if(!query||photoTokens(query).length<2)return result;
   try{
-    const p=new URLSearchParams({action:"query",generator:"search",gsrsearch:query+" product package",gsrnamespace:"6",gsrlimit:"12",prop:"imageinfo",iiprop:"url|mime",iiurlwidth:"500",format:"json",origin:"*"});
-    const j=await fetchJson("https://commons.wikimedia.org/w/api.php?"+p);
-    const pages=Object.values(j.query?.pages||{});
-    const wanted=photoTokens(query);
-    return pages.filter(p=>p.imageinfo?.[0]&&/\.(jpe?g|png|webp)$/i.test(p.title||""))
-      .map(p=>({url:safeImage(p.imageinfo[0].thumburl||p.imageinfo[0].url),score:scoreProduct({product_name:p.title,brands:""},wanted)}))
-      .filter(x=>x.url&&x.score>=0.45).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.url);
-  }catch(e){console.debug("Alternate photo lookup failed",e);return[]}
+    const params=new URLSearchParams({search_terms:query,page_size:"30",fields:"product_name,product_name_en,brands,image_front_url,image_front_small_url,image_url"});
+    const j=await fetchJson("https://world.openfoodfacts.org/api/v2/search?"+params);
+    for(const product of j.products||[]){
+      if(!photoMatch(query,product))continue;
+      const url=imageFromProduct(product);
+      if(url&&!result.includes(url))result.push(url);
+      if(result.length>=5)break;
+    }
+  }catch(e){console.debug("Package photo search unavailable",e)}
+  return result;
 }
 async function lookupImage(d,el){
   const key=photoCacheKey(d);
   const sources=[
-    "./images/products/"+encodeURIComponent(d.id)+".webp",
-    d.image,
+    "./images/verified-products/"+encodeURIComponent(d.id)+".webp",
     imageCache[key]
   ].filter(Boolean);
   for(const url of sources){
@@ -407,7 +398,7 @@ async function lookupImage(d,el){
     }
     if(imageCache[key]===url){delete imageCache[key];try{localStorage.setItem(imageCacheKey,JSON.stringify(imageCache))}catch{}}
   }
-  const candidates=[...await openFoodFactsCandidates(d),...await commonsCandidates(d)];
+  const candidates=await openFoodFactsCandidates(d);
   for(const url of [...new Set(candidates)]){
     if(!el.isConnected)return;
     if(await tryPhoto(el,url)){
@@ -415,7 +406,7 @@ async function lookupImage(d,el){
       return;
     }
   }
-  if(el.isConnected)el.innerHTML='<span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Photo not available</span>';
+  if(el.isConnected)el.innerHTML='<span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Verified photo unavailable</span>';
 }
 function pumpImages(){
   while(activeImages<4&&imageQueue.length){
@@ -819,7 +810,7 @@ if($("#filter-reset"))$("#filter-reset").onclick=()=>{
   browsePreferences={...browsePreferences,...browseDefaults};
   saveBrowsePreferences();
   render();
-};document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;search="";render();window.scrollTo(0,0)});draw()}function draw(){let el=$("#body");if(view==="changelog"){el.innerHTML='<section class="panel"><h2>Version history</h2><p>Current version: v'+APP_VERSION+'</p><div class="changelog"><h3>v0.11.2 — This week and next week</h3><p>Displays the newly imported November 12–18 BOGOs alongside the November 19–25 preview without overwriting either week. Shopping lists stay associated with their sale dates.</p><h3>v0.11.1 — Weekly ad diagnostic and coupon links</h3><p>Added a read-only weekly-ad check and changed Publix coupon-name links to use the product keyword filter where possible. No unverified coupon deep links are invented.</p><h3>v0.11.0 — Card actions and weekly lists</h3><p>Replaced large Favorite and Add buttons with corner heart/cart toggles, opened a product editor from the picture or More, linked coupon names to providers, and separated shopping lists by week with custom named lists. Previous shopping items migrate automatically.</p><h3>v0.10.1 — Coupon details and shopping progress</h3><p>Condensed the listed coupons and rebates into expandable details with provider links. Potential savings remain separate from BOGO estimates. Added a shopping progress bar and a saved Hide checked option.</p><h3>v0.10.0 — Shopping list</h3><p>One-page list with quantities, purchased checkboxes, grouped categories, and estimated BOGO spending and savings. Saved products survive catalog changes; incomplete prices are excluded rather than guessed.</p><h3>v0.9.9 — Deal browsing and filters</h3><p>Added compact sorting by category, price and product name, with an optional filter drawer for coupons, alcohol and maximum deal price. Preferences are saved on-device and do not change the default category order.</p><h3>v0.9.8 — Faster, more reliable photos</h3><p>Prioritizes locally cached images before third-party requests, avoids photo collisions between similar products, and preserves found photos across weekly catalog changes.</p><h3>v0.9.7 — Dated weekly ads</h3><p>Shows sale dates and current, upcoming, or expired status; lets you switch weeks when a verified preview is available.</p><h3>v0.9.6 — Compact deal cards</h3><p>Removed stretched vertical gaps between product names, sizes and prices, and hid empty size labels.</p><h3>v0.9.5 — Automatic PWA updates</h3><p>On launch, return, and while open, the app checks the latest deployed build and silently refreshes when a new one is available. The service worker prefers network-fresh code and deals, using cache only offline.</p><h3>v0.9.4 — Photo brightness and category preferences</h3><p>Corrected dark product images by blending against a light warm image surface, and reordered categories to prioritize frozen, pantry, dairy, produce and meat.</p><h3>v0.9.3 — Shopping order and card cleanup</h3><p>Essential grocery categories first, alcohol last, concise per-item pricing, and safe formatting for unknown prices. Warmer photo presentation.</p><h3>v0.8.1 — Simpler image browsing</h3><p>One-tap Google Images search for every deal. Automated image discovery paused to keep maintenance lightweight.</p><h3>v0.8 — Weekly automation</h3><p>Scheduled deal imports, validation and safe publishing, with manual ad URL fallback.</p><h3>v0.7 — Photo database</h3><p>Persistent image suggestions, manual approval and automated caching.</p><h3>v0.6 — Product photos</h3><p>Cached and validated product photos, card image containment, image attribution.</p><h3>v0.5 — Full weekly catalog</h3><p>150 Publix offers, price ranges and photo matching.</p><h3>v0.4 — Navigation</h3><p>Deals, Lists, Favorites, saved favorites.</p><h3>v0.3 — Everyday design</h3><p>Dark layout, shared typography and consistent cards.</p><h3>v0.2 — Gold branding</h3><p>Gold color system, b. logo and icons.</p><h3>v0.1 — First build</h3><p>Search, filters, shopping list, import and GitHub Pages.</p></div><p>Development milestones reconstructed from GitHub commits.</p><button class="action" id="back-to-deals">Back to deals</button></section>';$("#back-to-deals").onclick=()=>{view="deals";render()};return}if(view==="import"){el.innerHTML='<section class="panel"><h2>Import deal text</h2><p>Paste lines like: Product Name, 16 oz, BOGO $5.99. Imports are saved on this device.</p><textarea id="raw" placeholder="Paste BOGO listings here"></textarea><div class="actions"><button class="action primary" id="parse">Import text</button></div><p id="status"></p></section>';$("#parse").onclick=()=>{let lines=$("#raw").value.split(/\n+/).map(x=>x.trim()).filter(x=>/BOGO/i.test(x));let added=lines.map((s,i)=>{let m=s.match(/BOGO\s*\$([\d.]+)/i);return{id:"manual-"+Date.now()+"-"+i,name:s.split(/,?\s*BOGO/i)[0],category:"Imported",price:m?Number(m[1]):null,details:s}});deals=[...added,...deals];localStorage.setItem("bogo-imports",JSON.stringify(added.concat(JSON.parse(localStorage.getItem("bogo-imports")||"[]"))));$("#status").textContent=added.length+" listings imported.";view="deals";render()};return}if(view==="list"){drawShoppingList(el);return}let items=deals.filter(d=>(view==="list"?isListed(d):view==="favorites"?isFavorite(d):true)&&(category==="All"||view==="list"||d.category===category)&&((d.name+" "+(d.details||"")).toLowerCase().includes(search.toLowerCase()))&&(view!=="deals"||matchesBrowseFilters(d)));if(view==="deals")items.sort(compareBrowseDeals);else items.sort((a,b)=>compareCategories(a.category||"Other",b.category||"Other"));el.innerHTML=(view==="deals"?weekBanner():"")+'<div class="meta">'+(view==="list"?"Shopping list":view==="favorites"?"Favorite products":"Available deals")+' · '+items.length+' items'+(view==="list"?'<button class="action" id="copy" style="float:right">Copy list</button>':"")+'</div><div class="grid">'+items.map(d=>'<article class="deal"><div class="picture"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading photo…</span></div><button class="photo-open" type="button" data-open="'+esc(d.id)+'" aria-label="Open '+esc(d.name)+' details"></button><button class="corner-heart'+(isFavorite(d)?" active":"")+'" type="button" data-fav="'+esc(d.id)+'" aria-label="Favorite '+esc(d.name)+'" aria-pressed="'+isFavorite(d)+'">'+(isFavorite(d)?"♥":"♡")+'</button><button class="corner-list'+(isListed(d)?" active":"")+'" type="button" data-id="'+esc(d.id)+'" aria-label="Add '+esc(d.name)+' to list" aria-pressed="'+isListed(d)+'">'+(isListed(d)?"✓":"+")+'</button></div><div class="info">'+'<div class="name">'+esc(d.name)+'</div>'+(d.imageVariant?'<div class="image-variant">Representative: '+esc(d.imageVariant)+'</div>':'')+(d.details||d.size?'<div class="size">'+esc(d.details||d.size)+'</div>':"")+'<div class="price">BOGO '+priceText(d)+'</div>'+(eachPrice(d)?'<div class="each">'+eachPrice(d)+'</div>':"")+couponDetailsHTML(d)+'<button class="more-btn" data-more="'+esc(d.id)+'" type="button">More</button></div></article>').join("")+'</div>'+(items.length?"":'<div class="empty">No matching deals.</div>');observeImages(items);document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.id);if(!d)return;toggleShoppingItem(d);syncProductCardButtons(d);if(view==="favorites")draw()});
+};document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;search="";render();window.scrollTo(0,0)});draw()}function draw(){let el=$("#body");if(view==="changelog"){el.innerHTML='<section class="panel"><h2>Version history</h2><p>Current version: v'+APP_VERSION+'</p><div class="changelog"><h3>v0.11.3 — Product photo accuracy</h3><p>Discontinued unverified image-search thumbnails and loose Wikimedia matches. Product photos must now come from a known barcode or a stronger brand-and-product match. Old bad photo caches are bypassed.</p><h3>v0.11.2 — This week and next week</h3><p>Displays the newly imported November 12–18 BOGOs alongside the November 19–25 preview without overwriting either week. Shopping lists stay associated with their sale dates.</p><h3>v0.11.1 — Weekly ad diagnostic and coupon links</h3><p>Added a read-only weekly-ad check and changed Publix coupon-name links to use the product keyword filter where possible. No unverified coupon deep links are invented.</p><h3>v0.11.0 — Card actions and weekly lists</h3><p>Replaced large Favorite and Add buttons with corner heart/cart toggles, opened a product editor from the picture or More, linked coupon names to providers, and separated shopping lists by week with custom named lists. Previous shopping items migrate automatically.</p><h3>v0.10.1 — Coupon details and shopping progress</h3><p>Condensed the listed coupons and rebates into expandable details with provider links. Potential savings remain separate from BOGO estimates. Added a shopping progress bar and a saved Hide checked option.</p><h3>v0.10.0 — Shopping list</h3><p>One-page list with quantities, purchased checkboxes, grouped categories, and estimated BOGO spending and savings. Saved products survive catalog changes; incomplete prices are excluded rather than guessed.</p><h3>v0.9.9 — Deal browsing and filters</h3><p>Added compact sorting by category, price and product name, with an optional filter drawer for coupons, alcohol and maximum deal price. Preferences are saved on-device and do not change the default category order.</p><h3>v0.9.8 — Faster, more reliable photos</h3><p>Prioritizes locally cached images before third-party requests, avoids photo collisions between similar products, and preserves found photos across weekly catalog changes.</p><h3>v0.9.7 — Dated weekly ads</h3><p>Shows sale dates and current, upcoming, or expired status; lets you switch weeks when a verified preview is available.</p><h3>v0.9.6 — Compact deal cards</h3><p>Removed stretched vertical gaps between product names, sizes and prices, and hid empty size labels.</p><h3>v0.9.5 — Automatic PWA updates</h3><p>On launch, return, and while open, the app checks the latest deployed build and silently refreshes when a new one is available. The service worker prefers network-fresh code and deals, using cache only offline.</p><h3>v0.9.4 — Photo brightness and category preferences</h3><p>Corrected dark product images by blending against a light warm image surface, and reordered categories to prioritize frozen, pantry, dairy, produce and meat.</p><h3>v0.9.3 — Shopping order and card cleanup</h3><p>Essential grocery categories first, alcohol last, concise per-item pricing, and safe formatting for unknown prices. Warmer photo presentation.</p><h3>v0.8.1 — Simpler image browsing</h3><p>One-tap Google Images search for every deal. Automated image discovery paused to keep maintenance lightweight.</p><h3>v0.8 — Weekly automation</h3><p>Scheduled deal imports, validation and safe publishing, with manual ad URL fallback.</p><h3>v0.7 — Photo database</h3><p>Persistent image suggestions, manual approval and automated caching.</p><h3>v0.6 — Product photos</h3><p>Cached and validated product photos, card image containment, image attribution.</p><h3>v0.5 — Full weekly catalog</h3><p>150 Publix offers, price ranges and photo matching.</p><h3>v0.4 — Navigation</h3><p>Deals, Lists, Favorites, saved favorites.</p><h3>v0.3 — Everyday design</h3><p>Dark layout, shared typography and consistent cards.</p><h3>v0.2 — Gold branding</h3><p>Gold color system, b. logo and icons.</p><h3>v0.1 — First build</h3><p>Search, filters, shopping list, import and GitHub Pages.</p></div><p>Development milestones reconstructed from GitHub commits.</p><button class="action" id="back-to-deals">Back to deals</button></section>';$("#back-to-deals").onclick=()=>{view="deals";render()};return}if(view==="import"){el.innerHTML='<section class="panel"><h2>Import deal text</h2><p>Paste lines like: Product Name, 16 oz, BOGO $5.99. Imports are saved on this device.</p><textarea id="raw" placeholder="Paste BOGO listings here"></textarea><div class="actions"><button class="action primary" id="parse">Import text</button></div><p id="status"></p></section>';$("#parse").onclick=()=>{let lines=$("#raw").value.split(/\n+/).map(x=>x.trim()).filter(x=>/BOGO/i.test(x));let added=lines.map((s,i)=>{let m=s.match(/BOGO\s*\$([\d.]+)/i);return{id:"manual-"+Date.now()+"-"+i,name:s.split(/,?\s*BOGO/i)[0],category:"Imported",price:m?Number(m[1]):null,details:s}});deals=[...added,...deals];localStorage.setItem("bogo-imports",JSON.stringify(added.concat(JSON.parse(localStorage.getItem("bogo-imports")||"[]"))));$("#status").textContent=added.length+" listings imported.";view="deals";render()};return}if(view==="list"){drawShoppingList(el);return}let items=deals.filter(d=>(view==="list"?isListed(d):view==="favorites"?isFavorite(d):true)&&(category==="All"||view==="list"||d.category===category)&&((d.name+" "+(d.details||"")).toLowerCase().includes(search.toLowerCase()))&&(view!=="deals"||matchesBrowseFilters(d)));if(view==="deals")items.sort(compareBrowseDeals);else items.sort((a,b)=>compareCategories(a.category||"Other",b.category||"Other"));el.innerHTML=(view==="deals"?weekBanner():"")+'<div class="meta">'+(view==="list"?"Shopping list":view==="favorites"?"Favorite products":"Available deals")+' · '+items.length+' items'+(view==="list"?'<button class="action" id="copy" style="float:right">Copy list</button>':"")+'</div><div class="grid">'+items.map(d=>'<article class="deal"><div class="picture"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading photo…</span></div><button class="photo-open" type="button" data-open="'+esc(d.id)+'" aria-label="Open '+esc(d.name)+' details"></button><button class="corner-heart'+(isFavorite(d)?" active":"")+'" type="button" data-fav="'+esc(d.id)+'" aria-label="Favorite '+esc(d.name)+'" aria-pressed="'+isFavorite(d)+'">'+(isFavorite(d)?"♥":"♡")+'</button><button class="corner-list'+(isListed(d)?" active":"")+'" type="button" data-id="'+esc(d.id)+'" aria-label="Add '+esc(d.name)+' to list" aria-pressed="'+isListed(d)+'">'+(isListed(d)?"✓":"+")+'</button></div><div class="info">'+'<div class="name">'+esc(d.name)+'</div>'+(d.imageVariant?'<div class="image-variant">Representative: '+esc(d.imageVariant)+'</div>':'')+(d.details||d.size?'<div class="size">'+esc(d.details||d.size)+'</div>':"")+'<div class="price">BOGO '+priceText(d)+'</div>'+(eachPrice(d)?'<div class="each">'+eachPrice(d)+'</div>':"")+couponDetailsHTML(d)+'<button class="more-btn" data-more="'+esc(d.id)+'" type="button">More</button></div></article>').join("")+'</div>'+(items.length?"":'<div class="empty">No matching deals.</div>');observeImages(items);document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.id);if(!d)return;toggleShoppingItem(d);syncProductCardButtons(d);if(view==="favorites")draw()});
 document.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{const d=deals.find(x=>x.id===b.dataset.fav);if(!d)return;toggleFavoriteProduct(d);syncProductCardButtons(d);if(view==="favorites")draw()});
 document.querySelectorAll("[data-open], [data-more]").forEach(b=>b.onclick=()=>{const id=b.dataset.open||b.dataset.more;const d=deals.find(x=>x.id===id);if(d)openProductDetail(d)});
 wireCouponDetails(el);if($("#copy"))$("#copy").onclick=()=>navigator.clipboard.writeText(items.map(x=>x.name+" — BOGO "+priceText(x)).join("\n"))}async function init(){
