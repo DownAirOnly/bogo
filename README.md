@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.11.5.**
+**Current app version: v0.12.0.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -18,6 +18,10 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - Deal images open an in-app product details sheet to edit quantities, favorites and which same-week list receives the deal; a small More button opens the same sheet.
 - Small black corner actions on each product photo: top-right heart turns red for favorites; bottom-right add-to-list becomes blue when selected. Both toggle directly without reloading the grid.
 - Weekly shopping lists are created automatically for each sale-date range; separate named lists can be created, renamed, selected and deleted for a given week.
+- Upcoming deals are compared conservatively against the preceding saved advertisement, with "New this week" labels and a filter when an adjacent historical ad is available.
+- Unchecked items carried into another week are reconciled against returning product matches; successful matches use current-week deal details, and unmatched products remain on the list without a speculative discount.
+- Favorites are kept in a local product library across sale weeks, including items no longer advertised; expired BOGO prices aren't displayed as active.
+- Shopping list summaries distinguish total estimated spending and what remains to buy. Use Share on iPhone or Copy to send quantities, checkmarks, and provisional totals.
 - On a newer week's list, **Bring over unchecked items** carries unpurchased products from the most recent earlier list. It preserves quantities and skips duplicates, without modifying the old list. Items not found in the new advertisement are excluded from BOGO cost and savings estimates.
 - Older shopping-list quantities and purchased states migrate safely to weekly list storage the first time v0.11.0 opens; original legacy storage remains untouched.
 - The search bar now fills the header; Lists live in the bottom navigation, without a duplicate top-right button.
@@ -34,7 +38,8 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 
 ## Weekly automation
 - `.github/workflows/weekly-deals.yml` runs daily, plus extra checks Wednesday–Friday.
-- `scripts/update_weekly_deals.py` discovers weekly iHeartPublix ads from the homepage, weekly-ad page, RSS and optional public WordPress API. If an article cannot be fetched directly, it can use full article content supplied by RSS/API.
+- `scripts/update_weekly_deals.py` discovers weekly iHeartPublix ads from the homepage, weekly-ad page, RSS and optional public WordPress API.
+- Before a newly valid catalog replaces the main week, the importer saves the outgoing catalog as `data/previous-deals.json`. The publisher uses SHA-protected writes and retains date order; the PWA keeps older catalogs available for comparisons but hides expired ads from active shopping. If an article cannot be fetched directly, it can use full article content supplied by RSS/API.
 - It extracts BOGO listings, price ranges and no-price offers, classifies grocery categories and validates catalog size, prices, categories and sale dates.
 - Valid previews are staged as `data/next-deals.json`; they become `data/deals.json` when their sale week begins. Failures retain the existing catalogs.
 - `scripts/publish_weekly_catalog.py` publishes only newer dated catalogs and protects against GitHub write conflicts.
