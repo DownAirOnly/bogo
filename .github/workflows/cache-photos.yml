@@ -6,6 +6,7 @@ on:
       - scripts/cache_images.py
       - scripts/apply_image_database.py
       - data/product-images.json
+      - data/deals.json
       - .github/workflows/cache-photos.yml
 permissions:
   contents: write
