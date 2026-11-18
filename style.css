@@ -262,3 +262,7 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 /* v0.12.1: explicit recovery when the sale data is unavailable. */
 .sale-banner #retry-catalog,.empty #deal-reset{border:1px solid var(--border);background:var(--surface2);color:var(--accent-soft);border-radius:9px;font-size:12px;font-weight:800;padding:8px 12px;margin-left:8px}
 .empty #deal-reset{display:block;margin:12px auto 0}
+
+/* v0.12.2: quantities may be too small for some coupons and rebates. */
+.coupon-quantity-warning{margin:5px 0 4px;padding:8px 9px;border:1px solid rgba(245,194,93,.28);border-radius:9px;background:rgba(235,172,75,.075);color:var(--accent-soft);font-size:10px;line-height:1.4;font-weight:600}
+.product-dialog .coupon-quantity-warning{font-size:11px}
