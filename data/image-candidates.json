@@ -1,5 +1,31 @@
 {
   "schemaVersion": 1,
   "description": "Automated search suggestions requiring human review; never displayed directly.",
-  "products": {}
+  "products": {
+    "publix-2026-11-8": {
+      "dealName": "Stacy’s Pita Chips, Bagel or Thins",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-2026-11-13": {
+      "dealName": "Casa Farive Prosecco Superiore DOCG, Valdobbiadene",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-2026-11-16": {
+      "dealName": "Made by James Reserve Cabernet Sauvignon Wine",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-2026-11-19": {
+      "dealName": "Raeburn Pinot Noir Wine",
+      "status": "needs-review",
+      "options": []
+    },
+    "publix-2026-11-20": {
+      "dealName": "Shock Top Belgian White Wheat Ale Beer",
+      "status": "needs-review",
+      "options": []
+    }
+  }
 }
