@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "description": "Approved product photo references, independent of weekly deals. Only status=approved records are published.",
+  "products": {}
+}
