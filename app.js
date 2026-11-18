@@ -617,7 +617,7 @@ function drawShoppingList(el){
         const d=e.deal,r=e.record,q=quantityOf(r),key=esc(e.key);
         return '<article class="shopping-row'+(r.checked?" is-checked":"")+'" data-list-key="'+key+'">'+
           '<input class="shopping-check" type="checkbox" data-check="'+key+'" aria-label="Mark '+esc(d.name)+' purchased"'+(r.checked?" checked":"")+'>'+
-          '<div class="list-thumb"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading…</span></div></div>'+
+          '<div class="list-thumb"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading…</span></div><button class="list-photo-open" type="button" data-open-list="'+key+'" aria-label="Open '+esc(d.name)+' details"></button></div>'+
           '<div class="list-row-main"><div class="list-product-name">'+esc(d.name)+'</div>'+
           (d.details||d.size?'<div class="list-product-size">'+esc(d.details||d.size)+'</div>':"")+
           '<div class="list-product-price">BOGO '+priceText(d)+(e.live?"":' · <span>Not in selected ad</span>')+'</div>'+couponDetailsHTML(d)+
@@ -632,6 +632,10 @@ function drawShoppingList(el){
   observeImages(visible.map(x=>x.deal));
   bindListManager();
   wireCouponDetails(el);
+  document.querySelectorAll("[data-open-list]").forEach(b=>b.onclick=()=>{
+    const match=shoppingListRecords().find(x=>x.key===b.dataset.openList);
+    if(match)openProductDetail(match.deal);
+  });
   document.querySelectorAll("[data-check]").forEach(el=>el.onchange=()=>{
     const item=shoppingItems[el.dataset.check];
     if(!item)return;
@@ -658,6 +662,89 @@ function drawShoppingList(el){
       " — "+(estimateShoppingItem(e).available?listEstimateText(e):"Price not confirmed")).join("\n");
     navigator.clipboard.writeText(text).catch(error=>console.warn("Copy unavailable",error));
   };
+}
+function openProductDetail(d){
+  document.querySelectorAll("dialog.product-dialog").forEach(existing=>existing.close());
+  const dialog=document.createElement("dialog");
+  dialog.className="product-dialog";
+  let target=targetShoppingList();
+  const choices=Object.values(shoppingLists).filter(l=>l.weekStart===target.weekStart)
+    .sort((a,b)=>Number(b.default)-Number(a.default)||a.name.localeCompare(b.name));
+  const selection=choices.map(l=>'<option value="'+esc(l.id)+'"'+
+    (l.id===target.id?" selected":"")+'>'+esc(l.name)+'</option>').join("");
+  dialog.innerHTML='<div class="product-dialog-inner">'+
+    '<div class="product-dialog-head"><span>Product details</span><button type="button" id="product-close" aria-label="Close">×</button></div>'+
+    '<div class="product-dialog-picture"><div class="photo-placeholder" data-photo-id="'+esc(d.id)+'" data-name="'+esc(d.name)+'"><span class="placeholder-category">'+esc(d.category||"Grocery")+'</span><span class="placeholder-label">Loading photo…</span></div></div>'+
+    '<h2>'+esc(d.name)+'</h2>'+(d.details||d.size?'<p class="product-detail-size">'+esc(d.details||d.size)+'</p>':"")+
+    '<div class="product-detail-price">BOGO '+priceText(d)+(eachPrice(d)?'<span>'+eachPrice(d)+'</span>':"")+'</div>'+
+    '<label class="product-list-label" for="product-list-select">Shopping list</label>'+
+    '<select id="product-list-select">'+selection+'</select>'+
+    '<div class="product-modal-actions">'+
+    '<button type="button" id="product-list-toggle"></button>'+
+    '<button type="button" id="product-fav-toggle"></button></div>'+
+    '<div class="product-modal-quantity" id="product-modal-quantity"><span>Quantity</span>'+
+    '<div class="quantity-control"><button type="button" id="modal-qty-minus" aria-label="Decrease quantity">−</button>'+
+    '<strong id="modal-qty-value">2</strong><button type="button" id="modal-qty-plus" aria-label="Increase quantity">+</button></div></div>'+
+    couponDetailsHTML(d)+'</div>';
+  document.body.append(dialog);
+  dialog.addEventListener("close",()=>dialog.remove(),{once:true});
+  dialog.querySelector("#product-close").onclick=()=>dialog.close();
+  dialog.addEventListener("click",event=>{
+    if(event.target===dialog)dialog.close();
+  });
+  function refresh(){
+    const added=isListed(d,target.id);
+    const fav=isFavorite(d);
+    const button=dialog.querySelector("#product-list-toggle");
+    button.textContent=added?"✓ In this list":"+ Add to list";
+    button.classList.toggle("active",added);
+    const heart=dialog.querySelector("#product-fav-toggle");
+    heart.textContent=fav?"♥ Favorited":"♡ Favorite";
+    heart.classList.toggle("active",fav);
+    const quantity=dialog.querySelector("#product-modal-quantity");
+    quantity.hidden=!added;
+    if(added){
+      const n=quantityOf(target.items[shoppingItemKey(d)]);
+      dialog.querySelector("#modal-qty-value").textContent=n;
+      dialog.querySelector("#modal-qty-minus").disabled=n<=1;
+      dialog.querySelector("#modal-qty-plus").disabled=n>=99;
+    }
+  }
+  dialog.querySelector("#product-list-select").onchange=e=>{
+    if(!shoppingLists[e.target.value])return;
+    target=shoppingLists[e.target.value];
+    selectShoppingList(target.id);
+    syncProductCardButtons(d);
+    refresh();
+  };
+  dialog.querySelector("#product-list-toggle").onclick=()=>{
+    toggleShoppingItem(d,target.id);syncProductCardButtons(d);refresh();
+    if(view==="list")draw();
+  };
+  dialog.querySelector("#product-fav-toggle").onclick=()=>{
+    toggleFavoriteProduct(d);syncProductCardButtons(d);refresh();
+    if(view==="favorites")draw();
+  };
+  for(const [id,delta] of [["modal-qty-minus",-1],["modal-qty-plus",1]]){
+    dialog.querySelector("#"+id).onclick=()=>{
+      const item=target.items[shoppingItemKey(d)];
+      if(!item)return;
+      item.quantity=Math.min(99,Math.max(1,quantityOf(item)+delta));
+      save();refresh();
+      if(view==="list")updateShoppingListUI();
+    };
+  }
+  wireCouponDetails(dialog);
+  refresh();
+  dialog.showModal();
+  const pic=dialog.querySelector(".product-dialog-picture .photo-placeholder");
+  const cardPhoto=document.querySelector('.deal [data-photo-id="'+CSS.escape(d.id)+'"] img');
+  if(cardPhoto){
+    const clone=cardPhoto.cloneNode(true);
+    pic.classList.add("has-photo");pic.replaceChildren(clone);
+  }else{
+    lookupImage(d,pic).catch(()=>{if(pic.isConnected)pic.textContent="Photo not available"});
+  }
 }
 function toggleFavoriteProduct(d){
   if(isFavorite(d)){
