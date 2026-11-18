@@ -167,3 +167,66 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .list-tool-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
 .list-tool-actions button{padding:8px 9px;white-space:nowrap}
 @media(max-width:360px){.list-tool-actions{gap:4px}.list-tool-actions button{font-size:11px;padding:7px}}
+
+/* v0.11.0 — Card corners, named weekly lists and product detail sheets. */
+.controls{grid-template-columns:minmax(0,1fr)}
+.deal .picture{position:relative}
+.deal .photo-open{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;padding:0;margin:0;border:0;border-radius:0;background:transparent;color:transparent;cursor:pointer}
+.deal .corner-heart,.deal .corner-list{position:absolute;right:8px;z-index:3;display:grid;place-items:center;width:36px;height:36px;min-height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(15,14,13,.94);box-shadow:0 1px 6px rgba(0,0,0,.26);color:#f9f2e8;font-weight:700;font-size:25px;line-height:1;padding:0;margin:0}
+.deal .corner-heart{top:8px}
+.deal .corner-heart.active{color:#ff3f59}
+.deal .corner-list{bottom:8px}
+.deal .corner-list.active{background:#2467e8;border-color:#77aaff;color:#fff;font-size:20px}
+.deal .corner-heart:focus-visible,.deal .corner-list:focus-visible,.deal .photo-open:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.deal .more-btn{border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--muted);font-size:12px;font-weight:700;padding:8px 10px;margin:6px 0 0;width:100%}
+.deal .more-btn:active{background:#53432a;color:var(--text)}
+/* Offer title is the link. Only the chevron expands requirements. */
+.coupon-details{margin:5px 0 2px;border-radius:9px;min-width:0}
+.coupon-title-row{display:flex;align-items:center;gap:4px;padding:6px 8px;min-width:0}
+.coupon-title-row .coupon-offer-link{flex:1;min-width:0;color:var(--accent-soft);font-size:11px;font-weight:800;line-height:1.35;text-decoration:none;overflow-wrap:anywhere}
+.coupon-title-row .coupon-offer-link[href]{text-decoration:underline;text-decoration-color:rgba(255,227,163,.42);text-underline-offset:3px}
+.coupon-extra{font-size:9px;color:var(--muted);white-space:nowrap}
+.coupon-details .coupon-expand{flex-shrink:0;border:0;border-radius:6px;background:#524326;color:var(--accent-soft);font-size:16px;line-height:1;width:27px;height:27px;padding:0;margin:0}
+.coupon-detail-body[hidden]{display:none!important}
+.coupon-detail-body .coupon-offer-link{color:var(--accent-soft);font-size:11px;font-weight:700;line-height:1.4}
+.coupon-detail-body .coupon-note{font-size:10px;color:var(--muted)}
+/* Weekly and custom lists */
+.list-manager{margin:0 0 13px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.list-manager>label{display:block;margin:0 0 7px;font-weight:800;font-size:13px;color:var(--text)}
+.list-manager-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+.list-manager-row select{min-width:0;width:100%;border-radius:10px;font-size:13px;font-weight:700;padding:10px 29px 10px 10px;background:var(--surface2)}
+.list-manager-row button{border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:#251a06;font-size:12px;font-weight:800;padding:10px}
+.list-manage-actions{display:flex;align-items:center;gap:13px;margin-top:8px;font-size:11px;color:var(--muted)}
+.list-manage-actions span{margin-right:auto;min-width:0}
+.list-manage-actions button{padding:4px 0;background:transparent;border:0;color:var(--accent-soft);font-size:11px;font-weight:700;white-space:nowrap}
+.list-thumb{position:relative}
+.list-photo-open{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer}
+.list-photo-open:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* Shared sheet dialogs */
+.product-dialog,.list-editor-dialog{border:1px solid var(--border);border-radius:20px;background:var(--bg);color:var(--text);padding:0;width:min(calc(100% - 28px),450px);max-height:min(90dvh,780px);box-shadow:0 20px 80px #0009;overflow:auto}
+.product-dialog::backdrop,.list-editor-dialog::backdrop{background:rgba(0,0,0,.74);backdrop-filter:blur(3px)}
+.product-dialog-inner,.list-editor-form{padding:18px}
+.product-dialog-head,.editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.product-dialog-head>span{font-size:12px;font-weight:700;color:var(--muted)}
+.product-dialog-head button,.editor-close{border:0;background:var(--surface2);color:var(--text);font-size:24px;line-height:1;width:32px;height:32px;border-radius:9px;padding:0}
+.product-dialog-picture{height:205px;padding:10px;border-radius:14px;background:#e9ddca;overflow:hidden;margin-bottom:14px}
+.product-dialog-picture .photo-placeholder{border-radius:10px;padding:9px}
+.product-dialog-picture img{max-width:100%;width:100%;height:100%;object-fit:contain}
+.product-dialog h2{font:700 20px/1.23 'Outfit',sans-serif;margin:0 0 7px}
+.product-detail-size{font-size:12px;color:var(--muted);margin:0 0 12px}
+.product-detail-price{display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center;gap:8px;font:700 20px/1.25 'Outfit',sans-serif;margin:0 0 18px}
+.product-detail-price span{font:700 13px 'DM Sans',sans-serif;color:var(--accent-soft)}
+.product-list-label,.list-editor-form>label{display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:var(--muted)}
+#product-list-select,.list-editor-form input,.list-editor-form select{width:100%;margin:0 0 14px;min-height:43px;padding:9px 11px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);font-size:14px}
+.product-modal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 15px}
+.product-modal-actions button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:11px;padding:11px 7px;font-size:12px;font-weight:800}
+#product-list-toggle.active{border-color:#4d85ee;color:#9ec1ff;background:#193967}
+#product-fav-toggle.active{border-color:#d9445b;color:#ff536b;background:#4e202b}
+.product-modal-quantity{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-size:13px;font-weight:700}
+.product-modal-quantity[hidden]{display:none}
+.product-modal-quantity .quantity-control strong{min-width:30px;text-align:center;font-size:13px}
+.editor-head h2{font:700 19px 'Outfit',sans-serif;margin:0}
+.editor-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:6px}
+.editor-buttons button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:10px;font-size:13px;font-weight:700;padding:10px 13px}
+.editor-buttons button[type=submit]{background:var(--accent);color:#261a05;border-color:var(--accent)}
+@media(max-width:360px){.deal .corner-heart,.deal .corner-list{width:32px;height:32px}.list-manage-actions{gap:8px}.list-manager-row button{padding:8px}}
