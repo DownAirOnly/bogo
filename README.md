@@ -1,26 +1,35 @@
 # bogo.
 
-Mobile-first Publix BOGO deal browser. Hosted on GitHub Pages.
+Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current version:** v0.6.1 (November 17, 2026). See [CHANGELOG.md](CHANGELOG.md) for the reconstructed milestone history.
+**Current app version: v0.9.7.**
 
-## Implemented
-- Gold branding and Everyday-inspired app layout.
-- Deals, Lists and Favorites navigation.
-- Search, category filters, local shopping list and favorites.
-- November 19–25, 2026 catalog with 150 offers.
-- Seven locally cached product images; missing images remain explicitly unverified.
-- Conservative image matching and image caching workflows.
-- Paste-text deal import on this device.
+## What works
+- Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
+- User-preferred category order and compact BOGO/per-item prices.
+- Automatic checks for newly deployed app versions on launch, return, and every 60 seconds while open.
+- Visible sale-date status: current, upcoming or expired.
+- Week selector when a separately validated upcoming catalog exists.
+- Stable product-name keys for favorites and list selections across weekly IDs.
 
-## Not yet implemented
-- Reliable automatic weekly deal ingestion.
-- Direct import of an external URL.
-- Broad image coverage across all products.
-- Named lists and cross-device sync.
+## Weekly automation
+- `.github/workflows/weekly-deals.yml` runs daily, plus extra checks Wednesday–Friday.
+- `scripts/update_weekly_deals.py` discovers weekly iHeartPublix ads from the homepage, weekly-ad page, RSS and optional public WordPress API. If an article cannot be fetched directly, it can use full article content supplied by RSS/API.
+- It extracts BOGO listings, price ranges and no-price offers, classifies grocery categories and validates catalog size, prices, categories and sale dates.
+- Valid previews are staged as `data/next-deals.json`; they become `data/deals.json` when their sale week begins. Failures retain the existing catalogs.
+- `scripts/publish_weekly_catalog.py` publishes only newer dated catalogs and protects against GitHub write conflicts.
+- The Pages deployment builds product images for both weeks automatically.
+- The importer has offline smoke tests in `tests/test_weekly_deals.py`.
+
+**Important:** These changes establish the automated process, but successful live extraction from the publisher's site has not yet been independently verified. The source can change markup or block automated requests. If a week is missed, the app explicitly displays the dates of its last valid catalog rather than presenting old offers as current.
 
 ## Catalog
-The app reads `data/deals.json`. Source attribution and offer dates are in the catalog metadata. Price ranges represent the original deal listing; verify local shelf prices and sale dates.
+The default catalog is `data/deals.json`. The optional preview catalog is `data/next-deals.json`. Both use `saleStart`, `saleEnd`, `sourceUrl` and a `deals` array.
 
-## Photo pipeline
-`scripts/enrich_images.py` proposes Open Food Facts matches and `scripts/cache_images.py` validates and caches image files. Image-file validity **does not prove a correct product/variant match**. Review mismatches before treating them as verified packaging.
+BOGO prices and coupon eligibility vary by location; the displayed amounts are previews and should be checked against local shelf tags.
+
+## Future
+- Increase the reliability and completeness of fresh weekly imports using real deployment logs.
+- Improve automatic matching of actual products and packaging.
+- Add quantities, totals and in-store check-off to shopping lists.
+- Improve coupon verification and optional alerts.
