@@ -2,6 +2,16 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.11.0 — November 17, 2026
+- Replaced the large Favorite and Add to List buttons with black corner controls overlaying product images: red active heart, blue active list button.
+- Made images and a smaller More button open a product details sheet with list selection, quantity stepper, favorite status and coupon notes.
+- Removed the redundant top-right List shortcut; the bottom Lists tab remains primary.
+- Automatically create separate shopping lists by sale week, preserve older lists, and support multiple custom named lists for each week.
+- Added list picker, New, Rename, Clear and Delete actions, with confirmation before destructive actions.
+- Migrated v0.10.x list items, quantities and purchased states to weekly list storage without deleting the old records.
+- Replaced generic numeric coupon dropdown labels with the actual named offer; offer names link to Publix, Ibotta or a printable coupon provider, and a separate chevron reveals terms.
+- Products with several offers show the first title and a More offers indicator instead of a count. Provider links may require searching for the exact current offer.
+
 ## v0.10.1 — November 17, 2026
 - Turn long coupon strings into expandable options on deal cards and in shopping-list rows.
 - Label source types such as Publix digital, printable coupon and Ibotta rebate, preserving purchase requirements and restrictions from the ad.
