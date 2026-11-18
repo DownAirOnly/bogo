@@ -230,3 +230,12 @@ main.wrap{padding-top:12px;padding-bottom:calc(110px + env(safe-area-inset-botto
 .editor-buttons button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:10px;font-size:13px;font-weight:700;padding:10px 13px}
 .editor-buttons button[type=submit]{background:var(--accent);color:#261a05;border-color:var(--accent)}
 @media(max-width:360px){.deal .corner-heart,.deal .corner-list{width:32px;height:32px}.list-manage-actions{gap:8px}.list-manager-row button{padding:8px}}
+
+/* v0.11.4: Quiet, honest fallbacks while package photos resolve. */
+.photo-placeholder:not(.has-photo) .placeholder-category{display:none}
+.photo-placeholder:not(.has-photo) .placeholder-label{color:#8b7b63;font-size:11px;line-height:1.35;font-weight:600;letter-spacing:.01em}
+.photo-placeholder.photo-missing{gap:6px;background:linear-gradient(145deg,#f3eadd,#e8dcc9);color:#8b7b63}
+.photo-missing-icon{display:grid;place-items:center;width:35px;height:35px;border:1.5px solid #ab9a7e;border-radius:9px;font-size:19px;line-height:1;color:#857358}
+.photo-missing-label{max-width:90%;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:.01em;color:#857358}
+.list-thumb .photo-missing-icon{width:25px;height:25px;font-size:13px}
+.list-thumb .photo-missing-label{font-size:8px}
