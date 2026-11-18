@@ -2,7 +2,7 @@
 
 Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub Pages.
 
-**Current app version: v0.12.3.**
+**Current app version: v0.12.4.**
 
 ## What works
 - Browsing grocery deals, product photographs, search, category filters, favorites and shopping lists.
@@ -23,6 +23,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 - Favorites are kept in a local product library across sale weeks, including items no longer advertised; expired BOGO prices aren't displayed as active.
 - Shopping list summaries distinguish total estimated spending and what remains to buy. Use Share on iPhone or Copy to send quantities, checkmarks, and provisional totals.
 - Coupon and rebate rows give a cautious minimum-quantity warning when all listed offers have a higher clear purchase requirement than the selected quantity; they do not assume an offer is clipped or combinable.
+- Lists also collect coupons/rebates for unpurchased currently advertised items in an optional **Coupons and rebates to check** section, with linked offer names and quantity warnings.
 - The selected sale week is remembered between launches while it is still available. New-deal comparisons are cached for faster mobile browsing and the week banner shows counts versus the preceding ad.
 - The app displays a Retry action if none of the published weekly catalogs can load, and a filter reset when restrictive filters leave no results.
 - On a newer week's list, **Bring over unchecked items** carries unpurchased products from the most recent earlier list. It preserves quantities and skips duplicates, without modifying the old list. Items not found in the new advertisement are excluded from BOGO cost and savings estimates.
@@ -42,7 +43,7 @@ Mobile-first Publix BOGO browser and installed iPhone PWA, published on GitHub P
 ## Weekly automation
 - `.github/workflows/weekly-deals.yml` runs daily, plus extra checks Wednesday–Friday.
 - `scripts/update_weekly_deals.py` discovers weekly iHeartPublix ads from the homepage, weekly-ad page, RSS and optional public WordPress API.
-- Every Pages deployment first runs `node --check app.js`, `scripts/validate_catalogs.py` and the quick parser smoke tests. Malformed data, duplicate product IDs, invalid price ranges and broken JavaScript stop deployment before it reaches users.
+- Every Pages deployment first runs `node --check app.js`, six quick cross-week matching regression checks, `scripts/validate_catalogs.py` and the parser smoke tests. Malformed data, duplicate product IDs, invalid price ranges and broken JavaScript stop deployment before it reaches users.
 - Before a newly valid catalog replaces the main week, the importer saves the outgoing catalog as `data/previous-deals.json`. The publisher uses SHA-protected writes and retains date order; the PWA keeps older catalogs available for comparisons but hides expired ads from active shopping. If an article cannot be fetched directly, it can use full article content supplied by RSS/API.
 - It extracts BOGO listings, price ranges and no-price offers, classifies grocery categories and validates catalog size, prices, categories and sale dates.
 - Valid previews are staged as `data/next-deals.json`; they become `data/deals.json` when their sale week begins. Failures retain the existing catalogs.
