@@ -48,7 +48,7 @@ def main():
         if d.get("image") or "beer" in d["category"].lower() or "wine" in d["category"].lower():continue
         key=norm(d["name"])
         if key in db["products"]:continue
-        if cands["products"].get(key,{}).get("status")=="reviewed":continue
+        if key in cands["products"]:continue
         tried+=1
         q=re.split(r"\s+[—–]\s+|\s+or\s+",d["name"])[0]
         options=[x for p in fetch(q) if (x:=match(d,p))]
