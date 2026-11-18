@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '55 13 * * 3,4'
 permissions:
   contents: read
   pages: write
@@ -28,6 +30,16 @@ jobs:
           import cairosvg
           cairosvg.svg2png(url='icons/icon.svg',write_to='icons/apple-touch-icon.png',output_width=180,output_height=180)
           PY
+      - name: Restore previously found product photos
+        uses: actions/cache@v4
+        with:
+          path: images/products
+          key: bogo-product-photos-${{ hashFiles('data/deals.json') }}
+      - name: Find and cache product photos automatically
+        continue-on-error: true
+        run: |
+          python -m pip install --quiet pillow
+          python scripts/build_product_photos.py
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
