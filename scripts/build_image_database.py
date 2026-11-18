@@ -35,7 +35,7 @@ def main():
     added=0
     attempted=0
     for d in catalog["deals"]:
-        key=d["id"]
+        key=re.sub(r"[^a-z0-9]+","-",d["name"].lower()).strip("-")
         if d.get("image") or key in db["products"] or key in candidates["products"]: continue
         if attempted>=20: break
         attempted+=1
