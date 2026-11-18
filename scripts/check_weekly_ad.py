@@ -9,7 +9,7 @@ import argparse
 import json
 import urllib.error
 
-from scripts import update_weekly_deals as weekly
+import update_weekly_deals as weekly
 
 
 def check(url, minimum):
