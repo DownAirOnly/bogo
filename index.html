@@ -1,1 +1,66 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1F1606"><link rel="icon" href="icons/icon.svg?v=5" type="image/svg+xml"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5"><link rel="manifest" href="manifest.webmanifest"><title>bogo.</title><link rel="stylesheet" href="style.css?v=094"></head><body><div id="app"></div><script src="app.js?v=094" defer></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1F1606">
+  <meta name="bogo-build" content="__BOGO_BUILD__">
+  <link rel="icon" href="icons/icon.svg?v=5" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>bogo.</title>
+  <link rel="stylesheet" href="style.css?v=__BOGO_BUILD__">
+  <script>
+    // Every deployed build writes deploy.json. A fresh check runs on PWA launch,
+    // resume, focus, and periodically while open. No user action is required.
+    (() => {
+      const loadedBuild = document.querySelector('meta[name="bogo-build"]').content;
+      let inFlight = false;
+      let lastCheck = 0;
+      async function checkForUpdates() {
+        if (inFlight || !navigator.onLine || document.visibilityState === "hidden") return;
+        if (Date.now() - lastCheck < 12000) return;
+        inFlight = true;
+        lastCheck = Date.now();
+        try {
+          const url = new URL("./deploy.json", location.href);
+          url.searchParams.set("_", String(Date.now()));
+          const response = await fetch(url.href, {cache: "no-store"});
+          if (!response.ok) return;
+          const data = await response.json();
+          const newest = typeof data.build === "string" && /^[a-zA-Z0-9._-]+$/.test(data.build) ? data.build : "";
+          if (!newest || newest === loadedBuild) return;
+          const destination = new URL(location.href);
+          if (destination.searchParams.get("build") === newest) return;
+          destination.searchParams.set("build", newest);
+          location.replace(destination.href);
+        } catch (error) {
+          // Stay usable offline; retry when connectivity returns.
+          console.debug("bogo update check deferred", error);
+        } finally {
+          inFlight = false;
+        }
+      }
+      checkForUpdates();
+      window.addEventListener("pageshow", checkForUpdates);
+      window.addEventListener("focus", checkForUpdates);
+      window.addEventListener("online", checkForUpdates);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkForUpdates();
+      });
+      setInterval(checkForUpdates, 60000);
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js", {updateViaCache: "none"})
+            .then(registration => registration.update())
+            .catch(error => console.debug("Service worker unavailable", error));
+        }, {once: true});
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="app.js?v=__BOGO_BUILD__" defer></script>
+</body>
+</html>
