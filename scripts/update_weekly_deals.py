@@ -1,114 +1,294 @@
 #!/usr/bin/env python3
-"""Guarded weekly Publix BOGO importer.
+"""Automatically discover and stage dated Publix BOGO advertisements.
 
-Discovers the current iHeartPublix weekly ad or accepts an explicit article URL.
-Only publishes when a coherent, dated, substantial BOGO catalog is extracted.
+The main catalog remains untouched if extraction fails. When a genuinely newer
+ad is published ahead of its sale week it is staged as next-deals.json. During
+the sale week it is promoted to deals.json. No manual action is required.
 """
-import argparse, datetime as dt, json, re, sys, urllib.request
+import argparse
+import datetime as dt
+import json
+import re
+import urllib.error
+import urllib.request
+import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin
 
-ROOT="https://www.iheartpublix.com/"
-CATALOG=Path("data/deals.json")
-class Page(HTMLParser):
+ROOT = "https://www.iheartpublix.com/"
+MAIN = Path("data/deals.json")
+NEXT = Path("data/next-deals.json")
+ARTICLE = re.compile(r"/20\d\d/\d\d/publix-ad-coupons-week-of-\d{1,2}-\d{1,2}-to-\d{1,2}-\d{1,2}", re.I)
+BOGO = re.compile(r"\bBOGO\b|\bbuy\s+one\s+get\s+one\s+free\b", re.I)
+PRICE = re.compile(r"\$\s*(\d+(?:\.\d{1,2})?)(?:\s*[-–—]\s*\$?\s*(\d+(?:\.\d{1,2})?))?", re.I)
+NO_PRICE = re.compile(r"no\s+price\s+(?:listed|given)|price\s+(?:not\s+listed|varies)", re.I)
+CATEGORY_NAMES = (
+    "Frozen Foods", "Pantry, Snacks & Drinks", "Dairy & Refrigerated",
+    "Produce & Deli", "Meat & Seafood", "Home, Health & Cleaning",
+    "Beer, Wine & Alternatives",
+)
+
+class HTMLLines(HTMLParser):
+    """Retain text blocks and links without JavaScript, ads, nav or footer."""
     def __init__(self):
-        super().__init__(); self.links=[]; self.lines=[]; self.current=[]; self.href=None; self.skip=0
-    def handle_starttag(self,tag,attrs):
-        a=dict(attrs)
-        if tag in ("script","style","nav","footer"):self.skip+=1
-        if tag=="a":self.href=a.get("href")
-        if tag in ("p","li","h1","h2","h3","h4","br","div"):self.flush()
-    def handle_endtag(self,tag):
-        if tag in ("script","style","nav","footer"):self.skip=max(0,self.skip-1)
-        if tag=="a":self.href=None
-        if tag in ("p","li","h1","h2","h3","h4","div"):self.flush()
-    def handle_data(self,data):
-        if self.skip:return
-        value=" ".join(data.split())
-        if not value:return
-        if self.href:self.links.append((value,self.href))
-        self.current.append(value)
+        super().__init__(convert_charrefs=True)
+        self.blocks, self.links, self.parts = [], [], []
+        self.skip = 0
+        self.skip_tags = {"script", "style", "nav", "footer", "noscript", "svg"}
+        self.block_tag = "text"
     def flush(self):
-        value=" ".join(self.current).strip()
-        if value:self.lines.append(value)
-        self.current=[]
-def fetch(url):
-    if not url.startswith("https://www.iheartpublix.com/"):raise ValueError("Only iHeartPublix article URLs are supported")
-    req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (compatible; bogo-weekly-deals/1.0; personal catalog)","Accept":"text/html"})
-    with urllib.request.urlopen(req,timeout=35) as response:
-        if response.status!=200:raise ValueError("HTTP status "+str(response.status))
-        data=response.read(4_000_000)
-    p=Page();p.feed(data.decode("utf-8","replace"));p.flush();return p
+        text = " ".join(self.parts).strip()
+        if text:
+            self.blocks.append((self.block_tag, re.sub(r"\s+", " ", text)))
+        self.parts = []
+        self.block_tag = "text"
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag in self.skip_tags:
+            self.flush()
+            self.skip += 1
+        if self.skip:
+            return
+        if tag == "a" and a.get("href"):
+            self.links.append(a["href"])
+        if tag in ("p", "li", "h1", "h2", "h3", "h4", "br", "tr"):
+            self.flush()
+            self.block_tag = tag
+    def handle_endtag(self, tag):
+        if tag in self.skip_tags:
+            self.skip = max(0, self.skip - 1)
+            return
+        if self.skip:
+            return
+        if tag in ("p", "li", "h1", "h2", "h3", "h4", "br", "tr", "div"):
+            self.flush()
+    def handle_data(self, data):
+        if self.skip:
+            return
+        value = " ".join(data.split())
+        if value:
+            self.parts.append(value)
+
+def get(url, timeout=25):
+    if not url.startswith(ROOT):
+        raise ValueError("Only public iHeartPublix URLs are allowed")
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Mozilla/5.0 (compatible; bogo-weekly/2.0; personal ad viewer)",
+        "Accept": "text/html,application/rss+xml,application/json,application/xml;q=0.9,*/*;q=0.8",
+    })
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        if response.status != 200:
+            raise ValueError("Unexpected HTTP status")
+        return response.read(5_000_000).decode("utf-8", "replace")
+
+def read_catalog(path):
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data.get("deals"), list) and data.get("saleStart") and data.get("saleEnd"):
+            return data
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+def sale_dates(url):
+    match = re.search(r"/(20\d\d)/\d\d/publix-ad-coupons-week-of-(\d{1,2})-(\d{1,2})-to-(\d{1,2})-(\d{1,2})", url, re.I)
+    if not match:
+        raise ValueError("Unrecognized ad dates")
+    year, m1, d1, m2, d2 = map(int, match.groups())
+    start = dt.date(year, m1, d1)
+    end = dt.date(year + int(m2 < m1), m2, d2)
+    if not 5 <= (end - start).days <= 8:
+        raise ValueError("Sale window must be roughly one week")
+    return start, end
+
 def discover():
-    p=fetch(ROOT)
-    links=[]
-    for label,url in p.links:
-        if "publix-ad-coupons-week-of-" in url:
-            links.append(urljoin(ROOT,url).split("?")[0])
-    # Article titles are dated; never assume the first link is the current week.
-    return list(dict.fromkeys(links))
-def parse_dates(url):
-    match=re.search(r"week-of-(\d{1,2})-(\d{1,2})-to-(\d{1,2})-(\d{1,2})",url)
-    if not match:raise ValueError("Could not identify sale dates from article URL")
-    m1,d1,m2,d2=map(int,match.groups())
-    year=int(re.search(r"/(20\d{2})/",url).group(1))
-    start=dt.date(year,m1,d1)
-    end=dt.date(year+(m2<m1),m2,d2)
-    if not (5<=(end-start).days<=8):raise ValueError("Unexpected sale length")
-    return start,end
-def parse(lines,start):
-    offers=[];active=False;seen=set()
-    categories=("Produce & Deli","Meat & Seafood","Dairy & Refrigerated","Frozen","Pantry","Snacks & Sweets","Beverages","Household & Personal Care")
-    cat="Other"
-    for line in lines:
-        line=re.sub(r"\s+"," ",line).strip()
-        if re.search(r"buy one get one free|\bBOGO\b",line,re.I):active=True
-        if any(line.lower().startswith(x.lower()) for x in categories):cat=next(x for x in categories if line.lower().startswith(x.lower()))
-        if not active or len(line)<12 or len(line)>450 or not re.search(r"\\bBOGO\\b",line,re.I):continue
-        if re.search(r"coupon|subscribe|advertis|printable|terms|privacy|comment",line,re.I):continue
-        # Require explicit price; do not manufacture missing prices.
-        match=re.search(r"\$\s*(\d+\.\d{2})(?:\s*[-–]\s*\$?\s*(\d+\.\d{2}))?",line)
-        if not match:continue
-        name=re.sub(r",?\\s*BOGO\\s*$","",line[:match.start()],flags=re.I).strip(" ,–:-")
-        if len(name)<8 or len(name)>180:continue
-        if re.search(r"\b(save|off|coupon|limit|each|regular price)\b",name,re.I):continue
-        key=re.sub(r"[^a-z0-9]+","-",name.lower()).strip("-")
-        if key in seen:continue
-        seen.add(key)
-        low=float(match.group(1));high=float(match.group(2) or match.group(1))
-        if not (0.5<=low<=high<=150):continue
-        offers.append({"id":"publix-"+start.isoformat()+"-"+key[:70],"category":cat,"name":name,
-            "details":"","price":low if low==high else None,"priceMin":low,"priceMax":high,
-            "priceLabel":match.group(1)+("–"+match.group(2) if match.group(2) else ""),
-            "coupon":"","notes":"","searchQuery":name})
-    return offers
-def main():
-    a=argparse.ArgumentParser();a.add_argument("--url",default="");a.add_argument("--min-offers",type=int,default=50);args=a.parse_args()
-    existing=json.loads(CATALOG.read_text())
-    candidates=[args.url] if args.url else discover()
-    today=dt.datetime.now(dt.timezone.utc).date()
-    for url in candidates:
+    """Try multiple public discovery surfaces so a stale homepage isn't fatal."""
+    links = []
+    for path in ("", "publix-ads-coupons/", "feed/"):
         try:
-            start,end=parse_dates(url)
-            if not (start-dt.timedelta(days=5)<=today<=end):continue
-            if start.isoformat()==existing.get("saleStart"):
-                print("Already published",start);return
-            page=fetch(url);deals=parse(page.lines,start)
-            if len(deals)<args.min_offers:
-                print(f"Rejected {url}: only {len(deals)} plausible offers (minimum {args.min_offers})")
+            raw = get(urljoin(ROOT, path), timeout=14)
+            if path == "feed/":
+                try:
+                    root = ET.fromstring(raw)
+                    links += [e.text for e in root.findall(".//item/link") if e.text]
+                except ET.ParseError:
+                    pass
+            page = HTMLLines()
+            page.feed(raw)
+            links += page.links
+        except (OSError, ValueError, urllib.error.URLError) as exc:
+            print("Discovery source unavailable:", path or "homepage", str(exc)[:100])
+    # WP REST is optional; not every WordPress site exposes it.
+    try:
+        raw = get(urljoin(ROOT, "wp-json/wp/v2/posts?per_page=30&_fields=link"), timeout=12)
+        links += [p.get("link", "") for p in json.loads(raw) if isinstance(p, dict)]
+    except (OSError, ValueError, urllib.error.URLError):
+        pass
+    valid = []
+    for raw_url in links:
+        url = urljoin(ROOT, raw_url or "").split("#")[0].split("?")[0]
+        if not ARTICLE.search(url) or not url.startswith(ROOT):
+            continue
+        try:
+            start, _ = sale_dates(url)
+        except ValueError:
+            continue
+        valid.append((start, url))
+    return [url for _, url in sorted(set(valid), reverse=True)]
+
+def category_heading(line, previous):
+    s = re.sub(r"[^a-z ]", " ", line.lower()).strip()
+    if not 2 <= len(s) <= 65:
+        return previous
+    if "wine" in s or "beer" in s or "alcohol" in s or "liquor" in s:
+        return "Beer, Wine & Alternatives"
+    if "frozen" in s:
+        return "Frozen Foods"
+    if any(x in s for x in ("dairy", "refrigerated", "cheese and yogurt")):
+        return "Dairy & Refrigerated"
+    if "produce" in s or s == "deli":
+        return "Produce & Deli"
+    if "meat" in s or "seafood" in s:
+        return "Meat & Seafood"
+    if any(x in s for x in ("health", "beauty", "cleaning", "household", "non food", "personal care")):
+        return "Home, Health & Cleaning"
+    if any(x in s for x in ("grocery", "snacks", "beverages", "pantry", "bakery", "breakfast")):
+        return "Pantry, Snacks & Drinks"
+    return previous
+
+def normalized_name(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+def parse_offers(blocks, start):
+    offers, seen = [], set()
+    category = "Pantry, Snacks & Drinks"
+    for kind, raw in blocks:
+        line = re.sub(r"\s+", " ", raw).strip()
+        if kind in ("h1", "h2", "h3", "h4") or (len(line) < 45 and not BOGO.search(line)):
+            category = category_heading(line, category)
+        if not (12 <= len(line) <= 450 and BOGO.search(line)):
+            continue
+        if re.search(r"add to shopping list|subscribe|privacy policy|leave a comment|printable coupon|advertisement", line, re.I):
+            # Coupon blocks often mention BOGO; never treat them as deal lines.
+            continue
+        bogo = BOGO.search(line)
+        prefix = line[:bogo.start()].strip(" \t,;:–—-*✓✔")
+        if len(prefix) < 5 or len(prefix) > 240:
+            continue
+        if re.search(r"^(?:save|off|coupon|limit|buy|view|click|see|regular price)\b", prefix, re.I):
+            continue
+        rest = line[bogo.end():]
+        match = PRICE.search(rest)
+        if not match and not NO_PRICE.search(rest):
+            continue
+        low = float(match.group(1)) if match else None
+        high = float(match.group(2) or match.group(1)) if match else None
+        if low is not None and not (0.49 <= low <= high <= 150):
+            continue
+        unit = "/lb" if re.search(r"/\s*lb\b|per\s+(?:pound|lb)\b", rest, re.I) else ""
+        # Remove bullet/checkmark prefixes but leave all product/variant text intact.
+        name = re.sub(r"^[\W_]+", "", prefix, flags=re.UNICODE).strip()
+        if not 5 <= len(name) <= 220:
+            continue
+        key = normalized_name(name)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        label = (f"{low:.2f}" + (f"–{high:.2f}" if high != low else "") + unit) if match else ""
+        offers.append({
+            "id": "publix-" + key[:100],
+            "category": category,
+            "name": name,
+            "details": "",
+            "price": low if low == high else None,
+            "priceMin": low, "priceMax": high, "priceLabel": label,
+            "coupon": "", "notes": "", "searchQuery": name,
+        })
+    return offers
+
+def validate(offers, minimum):
+    if len(offers) < minimum:
+        raise ValueError(f"Only {len(offers)} BOGO lines (minimum {minimum})")
+    paid = sum(d["priceMin"] is not None for d in offers)
+    if paid / len(offers) < 0.75:
+        raise ValueError(f"Only {paid} of {len(offers)} offers have prices")
+    # A partial section should not replace a complete 150-item catalog.
+    if len({x["category"] for x in offers}) < 3:
+        raise ValueError("Fewer than three grocery categories found")
+
+def carry_image_fields(offers, *catalogs):
+    old = {
+        normalized_name(d["name"]): d
+        for catalog in catalogs if catalog
+        for d in catalog.get("deals", [])
+        if d.get("name")
+    }
+    for deal in offers:
+        previous = old.get(normalized_name(deal["name"]))
+        if previous:
+            for key in ("image", "imageSource", "imageVariant", "imageStatus", "imageProductCode"):
+                if previous.get(key):
+                    deal[key] = previous[key]
+
+def stage(path, candidate):
+    existing = read_catalog(path)
+    if existing and existing.get("saleStart", "") >= candidate["saleStart"]:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("Staged", path, candidate["saleStart"], len(candidate["deals"]), "offers")
+    return True
+
+def main():
+    arg = argparse.ArgumentParser()
+    arg.add_argument("--url", default="", help="Optional public article URL for troubleshooting")
+    arg.add_argument("--min-offers", type=int, default=50)
+    arg.add_argument("--today", default="", help="YYYY-MM-DD, for local tests")
+    args = arg.parse_args()
+    today = dt.date.fromisoformat(args.today) if args.today else dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).date()
+    main = read_catalog(MAIN)
+    upcoming = read_catalog(NEXT)
+    if not main:
+        raise SystemExit("No valid baseline catalog; refusing to replace user data")
+
+    # Promote a verified preview when its Thursday sale date has arrived.
+    if upcoming and dt.date.fromisoformat(upcoming["saleStart"]) <= today:
+        if upcoming["saleStart"] > main["saleStart"]:
+            stage(MAIN, upcoming)
+            main = upcoming
+
+    urls = [args.url] if args.url else discover()
+    for url in urls:
+        try:
+            start, end = sale_dates(url)
+            if not today - dt.timedelta(days=10) <= start <= today + dt.timedelta(days=14):
                 continue
-            # Reuse cached photos only for identical normalized product names.
-            old={re.sub(r"[^a-z0-9]+","-",x["name"].lower()).strip("-"):x for x in existing.get("deals",[])}
-            for d in deals:
-                match=old.get(re.sub(r"[^a-z0-9]+","-",d["name"].lower()).strip("-"))
-                if match and match.get("image","").startswith("images/products/"):
-                    for k in ("image","imageSource","imageVariant","imageStatus"):
-                        if k in match:d[k]=match[k]
-            updated={"updated":today.isoformat(),"saleStart":start.isoformat(),"saleEnd":end.isoformat(),
-                     "sourceUrl":url,"source":"iHeartPublix weekly ad; automatically extracted (verify store prices)","deals":deals}
-            CATALOG.write_text(json.dumps(updated,indent=2,ensure_ascii=False)+"\n")
-            print("Prepared",len(deals),"offers for",start,"through",end);return
-        except Exception as exc:print("Skipped",url,type(exc).__name__,str(exc)[:150])
-    print("No validated new catalog; retaining existing data")
-if __name__=="__main__":main()
+            if start.isoformat() <= main["saleStart"]:
+                continue
+            if start > today and upcoming and start.isoformat() <= upcoming["saleStart"]:
+                continue
+            article = HTMLLines()
+            article.feed(get(url))
+            article.flush()
+            offers = parse_offers(article.blocks, start)
+            validate(offers, args.min_offers)
+            carry_image_fields(offers, main, upcoming)
+            snapshot = {
+                "updated": today.isoformat(), "saleStart": start.isoformat(),
+                "saleEnd": end.isoformat(), "sourceUrl": url,
+                "source": "iHeartPublix weekly ad; automatically extracted; local prices may vary",
+                "deals": offers,
+            }
+            if start > today and today <= dt.date.fromisoformat(main["saleEnd"]):
+                stage(NEXT, snapshot)
+            else:
+                stage(MAIN, snapshot)
+                main = snapshot
+            return
+        except Exception as exc:
+            print("Rejected ad", url, type(exc).__name__, str(exc)[:150])
+    print("No validated newer ad. Existing catalogs retained.")
+
+if __name__ == "__main__":
+    main()
