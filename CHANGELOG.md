@@ -2,6 +2,15 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.10.0 — November 17, 2026
+- Added compact, single-column shopping list organized by the user's preferred grocery category order.
+- Default to two units per BOGO selection, with per-item increase/decrease controls (1–99).
+- Check off items as they are purchased without rebuilding the photo grid; saved checkmarks survive app restarts.
+- Calculate estimated BOGO spend and savings using two-for-one pairs; odd quantities are billed as additional full-price items.
+- Show transparent totals and exclude per-pound, missing-price, expired or unavailable deals rather than guessing weights or prices.
+- Save product snapshots across catalog changes and migrate existing saved selections.
+- Provide a copyable, quantity-aware shopping list.
+
 ## v0.9.9 — November 17, 2026
 - Added mobile-friendly sorting: preferred category order (default), BOGO price low/high, and name A–Z.
 - Added a collapsed Filters panel with coupons-only, hide alcohol, and maximum BOGO price.
