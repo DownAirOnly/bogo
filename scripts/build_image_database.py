@@ -18,10 +18,17 @@ STOP = {"the","and","or","of","oz","size","products","assorted","variety","pack"
 def words(s):
     return set(re.findall(r"[a-z0-9]+", str(s).lower())) - STOP
 def search(q):
-    params = urllib.parse.urlencode({"search_terms":q,"search_simple":1,"action":"process","json":1,"page_size":12,"fields":"product_name,brands,image_front_url,code,quantity"})
-    request = urllib.request.Request("https://world.openfoodfacts.org/cgi/search.pl?"+params,headers={"User-Agent":"bogo-grocery-photo-database/0.2 (personal project; github.com/DownAirOnly/bogo)"})
-    with urllib.request.urlopen(request,timeout=16) as r:
-        return json.load(r).get("products",[])
+    params=urllib.parse.urlencode({'search_terms':q,'search_simple':1,'action':'process','json':1,'page_size':12,'fields':'product_name,brands,image_front_url,code,quantity'})
+    urls=['https://world.openfoodfacts.org/cgi/search.pl?'+params,'https://world.openfoodfacts.net/cgi/search.pl?'+params]
+    for url in urls:
+        try:
+            req=urllib.request.Request(url,headers={'User-Agent':'bogo-photo-guide/0.7 (github.com/DownAirOnly/bogo)'})
+            with urllib.request.urlopen(req,timeout=18) as response:
+                return json.load(response).get('products',[])
+        except Exception as exc:
+            print('Source unavailable',type(exc).__name__,str(exc)[:100])
+            time.sleep(2)
+    return []
 def score(q,p):
     wanted = words(q)
     found = words((p.get("brands") or "")+" "+(p.get("product_name") or ""))
@@ -37,8 +44,9 @@ def main():
     for d in catalog["deals"]:
         key=re.sub(r"[^a-z0-9]+","-",d["name"].lower()).strip("-")
         if d.get("image") or key in db["products"] or key in candidates["products"]: continue
-        if attempted>=20: break
+        if attempted>=15: break
         attempted+=1
+        if any(word in d.get("category","").lower() for word in ("beer","wine","alcohol")): continue
         q=d.get("searchQuery") or d["name"]
         # Broad offer groups may cover several products; keep suggestions review-only.
         try:
