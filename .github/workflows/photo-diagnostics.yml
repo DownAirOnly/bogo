@@ -1,0 +1,19 @@
+name: Inspect grocery product photo sources
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/photo_source_diagnostics.py'
+      - '.github/workflows/photo-diagnostics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet pillow
+      - name: Inspect six representative product image searches (read-only)
+        run: python scripts/photo_source_diagnostics.py
