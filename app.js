@@ -928,9 +928,13 @@ function drawShoppingList(el){
   if($("#list-share"))$("#list-share").onclick=()=>shareShoppingListText(all);
 }
 function productSourceUrl(d){
-  const catalog=allWeekCatalogs.find(w=>
-    w.catalog.deals.some(candidate=>candidate.id===d.id))?.catalog;
-  const raw=catalog?.sourceUrl||d.sourceUrl||"";
+  // Check object identity first: stable IDs may recur in different weeks.
+  const catalog=allWeekCatalogs.find(w=>w.catalog.deals.includes(d))?.catalog;
+  const current=currentAd();
+  const raw=d.sourceUrl||(current?.deals.includes(d)?current.sourceUrl:"")||
+    catalog?.sourceUrl||
+    allWeekCatalogs.filter(w=>w.catalog.deals.some(item=>item.id===d.id))
+      .sort((a,b)=>b.catalog.saleStart.localeCompare(a.catalog.saleStart))[0]?.catalog.sourceUrl||"";
   try{
     const u=new URL(raw);
     return u.protocol==="https:"&&["iheartpublix.com","www.iheartpublix.com"].includes(u.hostname)?u.href:"";
