@@ -2,6 +2,12 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.11.5 — November 18, 2026
+- Added an optional **Bring over unchecked items** action on later-week shopping lists.
+- Carries unpurchased items from the most recent earlier list, preserving quantities while skipping duplicates.
+- Keeps the earlier week untouched; products not on the new week's advertisement do not count toward projected BOGO spending or savings.
+- Reviewed 100 product images from the 309-photo release to spot-check relevance, retaining the successful photo cache rather than changing search-provider logic.
+
 ## v0.11.4 — November 18, 2026
 - Diagnosed why previous strict image filtering reduced photo coverage to 26/322.
 - Added DuckDuckGo's titled grocery image results as a fallback, with brand and product-word checks, retailer source ranking, and explicit exclusions for stock photos, games and recipes.
