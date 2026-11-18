@@ -2,6 +2,10 @@
 
 Version numbers are retrospective development milestones reconstructed from the repository's November 17, 2026 commit history. They are not claims that separate versioned releases were published at those points.
 
+## v0.6.1 — November 17, 2026
+- Added in-app version display and retrospective changelog.
+- Refined contained image thumbnails and photo presentation.
+
 ## v0.6.0 — November 17, 2026
 - Added locally cached product photos, image validation and resizing.
 - Constrained product photographs to their card media areas.
